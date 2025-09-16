@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Câu hỏi phỏng vấn Docker — Chi tiết</title>
+  <style>
+    :root{
+      --bg:#0b1020; --panel:#111735; --panel-2:#0e1430;
+      --text:#e6ebff; --muted:#a9b3d1; --accent:#7aa2ff;
+      --chip:#1b2347; --chip-border:#2a376b; --shadow:0 10px 30px rgba(0,0,0,.35);
+    }
+    *{box-sizing:border-box}
+    html,body{
+      height:100%;margin:0;background:
+      radial-gradient(1400px 900px at 80% -10%, #1a245a 0%, #0b1020 45%, #0b1020 100%), var(--bg);
+      color:var(--text);font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Arial
+    }
+    header{text-align:center;padding:18px 12px 6px}
+    h1{font-size:clamp(18px,4vw,28px);margin:0 0 6px}
+    .subtitle{color:var(--muted);font-size:clamp(12px,2.5vw,14px)}
+    .wrap{max-width:1150px;margin:0 auto;padding:12px;display:grid;gap:12px}
+    .panel{background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,.02));
+      border:1px solid rgba(255,255,255,.12);border-radius:12px;box-shadow:var(--shadow)}
+    .controls{padding:12px;display:grid;gap:10px}
+    .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+    .search{flex:1 1 260px;display:flex;align-items:center;gap:8px;background:var(--panel-2);
+      border:1px solid rgba(255,255,255,.12);border-radius:10px;padding:8px 10px}
+    .search input{background:transparent;border:0;outline:none;color:var(--text);width:100%}
+    .btn{background:var(--accent);color:#0b1020;border:0;padding:10px 12px;border-radius:10px;font-weight:700;cursor:pointer}
+    .chip{background:var(--chip);border:1px solid var(--chip-border);color:var(--text);
+      padding:8px 10px;border-radius:10px;font-size:12px;display:flex;gap:8px;align-items:center;cursor:pointer;user-select:none}
+    .chip input{accent-color:var(--accent)}
+    .grid{padding:12px;display:grid;gap:12px}
+    .topic{background:linear-gradient(180deg,rgba(255,255,255,.04),rgba(255,255,255,.02));
+      border:1px solid rgba(255,255,255,.12);border-radius:12px;overflow:hidden}
+    .topic-hdr{padding:12px;display:flex;align-items:center;justify-content:space-between}
+    .topic-title{font-weight:800;font-size:14px}
+    .topic-body{padding:12px;display:grid;gap:10px}
+    .q{border:1px solid rgba(255,255,255,.12);background:linear-gradient(180deg,rgba(20,26,60,.9),rgba(14,20,45,.9));
+      border-radius:12px;padding:10px}
+    .q-hdr{display:flex;align-items:flex-start;justify-content:space-between;gap:8px}
+    .q-title{font-weight:700;font-size:13px;line-height:1.45}
+    .q-actions{display:flex;gap:6px;flex-wrap:wrap}
+    .small-btn{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);
+      color:var(--text);padding:6px 8px;border-radius:8px;font-size:12px;cursor:pointer}
+    .a{margin-top:8px;color:var(--muted);font-size:13px;line-height:1.6;display:block}
+    .a pre{white-space:pre-wrap;margin:0}
+    @media (max-width:720px){.q-hdr{flex-direction:column;align-items:stretch}}
+    .footer{color:var(--muted);font-size:12px;text-align:center;padding:10px}
+    .tag{font-size:10px;padding:3px 6px;border-radius:999px;background:rgba(122,162,255,.15);
+      border:1px solid rgba(122,162,255,.35);color:var(--text)}
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Câu hỏi phỏng vấn Docker</h1>
+    <div class="subtitle">Bộ câu hỏi và trả lời chi tiết — có tìm kiếm, thu gọn/mở rộng chủ đề</div>
+  </header>
+
+  <div class="wrap">
+    <div class="panel controls">
+      <div class="row">
+        <div class="search">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M21 21l-3.8-3.8M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15Z" stroke="#a9b3d1" stroke-width="2" stroke-linecap="round"/></svg>
+          <input id="search" type="text" placeholder="Tìm kiếm (ví dụ: image layer, multi-stage, volumes, networking, healthcheck)..." />
+        </div>
+        <button id="clear" class="btn" style="background:#3ddc97;color:#07121f">Xóa lọc</button>
+      </div>
+      <div class="row">
+        <label class="chip"><input type="checkbox" class="f-topic" data-topic="fund" checked/> Cơ bản</label>
+        <label class="chip"><input type="checkbox" class="f-topic" data-topic="image" checked/> Image & Build</label>
+        <label class="chip"><input type="checkbox" class="f-topic" data-topic="runtime" checked/> Runtime & Volumes</label>
+        <label class="chip"><input type="checkbox" class="f-topic" data-topic="net" checked/> Networking</label>
+        <label class="chip"><input type="checkbox" class="f-topic" data-topic="compose" checked/> Docker Compose</label>
+        <label class="chip"><input type="checkbox" class="f-topic" data-topic="prod" checked/> Production & Security</label>
+        <label class="chip"><input type="checkbox" class="f-topic" data-topic="trouble" checked/> Debug & Troubleshoot</label>
+      </div>
+    </div>
+
+    <div id="container" class="grid"></div>
+
+    <div class="footer panel">
+      <div class="footer">
+        Lưu ý: Cấu hình/CLI mang tính minh họa. Hãy benchmark và kiểm tra bảo mật trước khi áp dụng vào production.
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const QA = {
+      fund: {
+        title: 'Cơ bản về Docker',
+        items: [
+          {
+            q: 'Docker là gì? Khác gì VM?',
+            a: `
+- Docker: nền tảng container hóa, đóng gói app + phụ thuộc thành image, chạy cô lập qua namespace/cgroups.
+- So với VM:
+  - Container dùng kernel host, nhẹ, khởi động nhanh, mật độ cao.
+  - VM ảo hóa cả OS, nặng hơn, cách ly mạnh hơn (hypervisor).
+- Use case: đóng gói, CI/CD, môi trường đồng nhất, scale microservices.`
+          },
+          {
+            q: 'Image và container khác nhau gì?',
+            a: `
+- Image: template bất biến (immutable), gồm nhiều layer (union FS).
+- Container: instance chạy của image (có writable layer).
+- Vòng đời: docker build → docker run → stop/start → rm; image: pull/push/tag/rm.`
+          },
+          {
+            q: 'Registry, repository, tag là gì?',
+            a: `
+- Registry: nơi lưu image (Docker Hub, GHCR, ECR, GCR...).
+- Repository: tập image cùng tên khác tag (myapp:1.0, myapp:latest).
+- Tag: nhãn phiên bản. Khuyến nghị dùng tag bất biến (SHA digest) cho prod.`
+          },
+          {
+            q: 'Dockerfile là gì? Các chỉ thị cơ bản (FROM, RUN, COPY, CMD, ENTRYPOINT)?',
+            a: `
+- Dockerfile: kịch bản build image.
+- FROM: image nền. RUN: chạy lệnh khi build (tạo layer).
+- COPY/ADD: chép file. ENV/ARG: biến môi trường/build arg.
+- EXPOSE: khai báo cổng. WORKDIR: thư mục làm việc.
+- CMD: lệnh mặc định. ENTRYPOINT: lệnh chính, khó bị override hơn CMD.`
+          },
+          {
+            q: 'Layer là gì? Cache build hoạt động ra sao?',
+            a: `
+- Mỗi chỉ thị tạo layer, image là chuỗi layer read-only + 1 writable layer khi chạy.
+- Build cache: nếu context/chỉ thị không đổi → tái dùng layer cũ.
+- Tối ưu: sắp xếp chỉ thị từ ít thay đổi đến nhiều; gom RUN; tránh COPY sớm các file hay đổi.`
+          }
+        ]
+      },
+
+      image: {
+        title: 'Image & Build nâng cao',
+        items: [
+          {
+            q: 'Multi-stage build là gì? Khi nào dùng?',
+            a: `
+- Multi-stage: build ở stage nặng (compiler, dev deps) rồi copy output sang stage cuối nhỏ gọn.
+- Giảm size image, tăng bảo mật (không ship tool build).
+- Ví dụ: build Golang/Node, stage cuối chỉ có binary/artefacts.`
+          },
+          {
+            q: 'Alpine vs Debian/Ubuntu base images?',
+            a: `
+- Alpine: nhỏ (~5MB), musl libc; có thể gặp vấn đề tương thích/hiệu năng với một số lib.
+- Debian/Ubuntu: lớn hơn nhưng tương thích rộng, glibc, gói phong phú.
+- Khuyến nghị: chọn base theo yêu cầu lib và bảo trì; cân nhắc distroless/ubi-minimal cho prod.`
+          },
+          {
+            q: 'Giảm kích thước image như thế nào?',
+            a: `
+- Multi-stage; dùng base nhỏ (alpine/distroless).
+- .dockerignore để giảm build context.
+- Gom RUN, xóa cache package (apt-get clean && rm -rf /var/lib/apt/lists/*).
+- Chỉ COPY những gì cần; nén layer hiệu quả.`
+          },
+          {
+            q: 'ENTRYPOINT vs CMD khác nhau ra sao? Kết hợp thế nào?',
+            a: `
+- ENTRYPOINT xác định executable chính, CMD cung cấp tham số mặc định.
+- docker run ... <args> sẽ override CMD, còn ENTRYPOINT vẫn chạy.
+- Mẫu: ENTRYPOINT ["myapp"]; CMD ["--port","8080"]`
+          },
+          {
+            q: 'BuildKit là gì? Lợi ích?',
+            a: `
+- BuildKit (DOCKER_BUILDKIT=1): engine build mới, nhanh hơn, parallel, cache tốt, secrets/sbom, output điều khiển.
+- docker buildx dùng BuildKit, hỗ trợ multi-arch (arm64/amd64) bằng QEMU.`
+          }
+        ]
+      },
+
+      runtime: {
+        title: 'Runtime & Volumes',
+        items: [
+          {
+            q: 'Volume, bind mount, tmpfs khác nhau?',
+            a: `
+- Volume: do Docker quản lý (docker volume), bền vững, portable; tốt cho data.
+- Bind mount: map thư mục host → container; linh hoạt cho dev, phụ thuộc host.
+- tmpfs: in-memory (RAM), không bền; phù hợp dữ liệu tạm/nhạy cảm.`
+          },
+          {
+            q: 'Persist dữ liệu DB trong container như thế nào?',
+            a: `
+- Dùng named volume hoặc bind mount tới thư mục data của DB (/var/lib/postgresql/data...).
+- Không khuyến nghị lưu dữ liệu bền trong layer ghi của container.
+- Cấu hình backup/restore ngoài container.`
+          },
+          {
+            q: 'Healthcheck là gì? Ảnh hưởng orchestration?',
+            a: `
+- HEALTHCHECK CMD ... kiểm tra tình trạng app trong container.
+- Orchestrator (Compose/Swarm/K8s) dựa vào trạng thái healthy để restart/route traffic.
+- Lưu ý: healthcheck quá ngắn/nghiêm khắc → flapping; cần threshold phù hợp.`
+          },
+          {
+            q: 'Giới hạn tài nguyên (CPU/memory/pids) cho container?',
+            a: `
+- Memory: --memory, --memory-swap; OOM killer khi vượt.
+- CPU: --cpus hoặc --cpu-quota/period, --cpuset-cpus để pin CPU.
+- PIDs: --pids-limit tránh fork bomb.
+- Ulimits: nofile, nproc… cấu hình qua --ulimit.`
+          },
+          {
+            q: 'Log driver và cách thu thập logs trong Docker?',
+            a: `
+- Mặc định json-file (stdout/stderr). Có các driver: journald, syslog, gelf, fluentd, awslogs, splunk.
+- Nên log ra stdout/stderr; ship bởi collector (Fluent Bit, Vector) tới tập trung (ELK, Loki).`
+          }
+        ]
+      },
+
+      net: {
+        title: 'Docker Networking',
+        items: [
+          {
+            q: 'Bridge, Host, None networks là gì?',
+            a: `
+- Bridge (mặc định): NAT qua host; container có IP riêng, port mapping -p host:container.
+- Host: dùng stack mạng host (Linux). Không cần -p; hiệu năng tốt, ít cách ly hơn.
+- None: không mạng; phù hợp batch hoặc tự gắn network sau.`
+          },
+          {
+            q: 'User-defined bridge vs default bridge?',
+            a: `
+- User-defined bridge: DNS nội bộ, alias, isolation tốt, control subnet.
+- Default bridge (bridge): không có DNS theo tên container (trừ --link cũ), ít tính năng.
+- Khuyến nghị: tạo mạng riêng cho ứng dụng microservices.`
+          },
+          {
+            q: 'Kết nối container với nhau qua DNS như thế nào?',
+            a: `
+- Tạo network: docker network create appnet
+- Chạy container gắn vào appnet, đặt --name hoặc --network-alias.
+- Container có thể gọi nhau qua tên (service discovery nội bộ).`
+          },
+          {
+            q: 'Publish cổng (-p) hoạt động thế nào? Tránh xung đột cổng?',
+            a: `
+- -p host_port:container_port ánh xạ cổng container lên host tại interface mặc định (0.0.0.0).
+- Có thể chỉ định IP: -p 127.0.0.1:8080:80 để chỉ expose local.
+- Tránh xung đột: kiểm tra cổng bận, dùng range hoặc reverse proxy.`
+          },
+          {
+            q: 'IPv6 và mạng overlay (Swarm/K8s) — khái quát?',
+            a: `
+- Docker hỗ trợ IPv6 với cấu hình daemon (experimental trước đây), cần subnet IPv6.
+- Overlay networks (Swarm) kết nối container đa host qua VXLAN.
+- Với Kubernetes dùng CNI (Calico, Flannel...) thay vì Docker overlay.`
+          }
+        ]
+      },
+
+      compose: {
+        title: 'Docker Compose',
+        items: [
+          {
+            q: 'Compose giải quyết gì? Cấu trúc cơ bản file compose?',
+            a: `
+- Compose orchestration lightweight cho nhiều services trên 1 máy.
+- Cấu trúc: version (v2+), services, networks, volumes.
+- Mỗi service định nghĩa image/build, env, ports, volumes, depends_on, healthcheck...`
+          },
+          {
+            q: 'depends_on, healthcheck, restart policy sử dụng?',
+            a: `
+- depends_on: định thứ tự khởi động; với v3 không chờ healthy trừ khi dùng condition: service_healthy.
+- healthcheck: xác định healthy.
+- restart: no/always/on-failure/unless-stopped để tự khởi động lại theo điều kiện.`
+          },
+          {
+            q: 'Compose môi trường dev/prod khác nhau như thế nào?',
+            a: `
+- Dev: bind mount source code, hot reload, extra tooling.
+- Prod: build image tối ưu, read-only root fs nếu có thể, secrets, không bind code.
+- Sử dụng nhiều file: docker compose -f compose.yml -f compose.prod.yml up.`
+          },
+          {
+            q: 'Secrets và env vars trong Compose?',
+            a: `
+- Env vars: env_file hoặc environment (chú ý không commit secrets).
+- Secrets (Swarm): quản lý file trong /run/secrets; với Compose thuần có thể dùng external secret managers hoặc mount file an toàn.`
+          },
+          {
+            q: 'Scale service và load balancing nội bộ?',
+            a: `
+- docker compose up --scale web=3 để tạo nhiều replica (trên 1 host).
+- User-defined bridge cung cấp round-robin DNS; kết hợp reverse proxy (nginx, traefik) để LB theo HTTP.`
+          }
+        ]
+      },
+
+      prod: {
+        title: 'Production & Security',
+        items: [
+          {
+            q: 'Các thực hành bảo mật khi đóng gói image?',
+            a: `
+- Nguyên tắc tối thiểu: base nhỏ (distroless), chỉ copy binaries cần thiết.
+- USER non-root; drop capabilities không cần; read-only root filesystem nếu có thể.
+- Scan image (trivy/grype), cập nhật định kỳ; pin version cụ thể.
+- Không lưu secrets trong image; dùng secrets manager.`
+          },
+          {
+            q: 'Giảm attack surface trong container?',
+            a: `
+- Non-root user, minimal packages, không sshd/cron thừa.
+- Seccomp, AppArmor/SELinux profiles; drop NET_RAW, CAP_SYS_ADMIN...
+- Limit egress/ingress qua network policy; bật no-new-privileges.`
+          },
+          {
+            q: 'Supply chain security: SBOM, signatures (cosign), provenance?',
+            a: `
+- SBOM: liệt kê thành phần (spdx/cyclonedx) để theo dõi CVE.
+- Ký image (cosign/notary v2) để xác thực nguồn gốc.
+- Reproducible builds, provenance (SLSA) — ghi lại chuỗi build.`
+          },
+          {
+            q: 'Resource limits và QoS trong prod?',
+            a: `
+- Đặt memory/cpu limit để cô lập noisy neighbor.
+- Healthcheck hợp lý, readiness/startup probe (trong K8s).
+- Log rotation cho json-file (max-size, max-file) hoặc dùng driver tập trung.`
+          },
+          {
+            q: 'So sánh Docker Swarm và Kubernetes ngắn gọn?',
+            a: `
+- Swarm: dễ dùng, tích hợp với Docker, ít tính năng hơn, phù hợp cluster nhỏ.
+- Kubernetes: tiêu chuẩn de-facto, giàu tính năng (autoscaling, CRDs, RBAC...), độ phức tạp cao hơn.`
+          }
+        ]
+      },
+
+      trouble: {
+        title: 'Debug & Troubleshoot',
+        items: [
+          {
+            q: 'Khắc phục sự cố build chậm/mất cache?',
+            a: `
+- Kiểm tra .dockerignore để giảm context.
+- Sắp xếp chỉ thị để tối đa cache hit; pin phiên bản deps.
+- Dùng BuildKit, cache-from/push (CI).`
+          },
+          {
+            q: 'Debug container: vào shell, xem process, network?',
+            a: `
+- docker exec -it <ctr> sh/bash; ps aux; lsof -i; netstat/ss.
+- Kiểm tra env: env, printconfig.
+- tcpdump bằng --cap-add NET_ADMIN hoặc chạy sidecar netshoot (ở K8s).`
+          },
+          {
+            q: 'Tra cứu logs và cấu hình log rotation?',
+            a: `
+- docker logs -f --tail=100 <ctr>
+- json-file options: --log-opt max-size=10m --log-opt max-file=3
+- Hoặc chuyển sang fluentd/journald để tập trung.`
+          },
+          {
+            q: 'Phân tích network: cổng không mở/không truy cập được?',
+            a: `
+- Kiểm tra app bind 0.0.0.0 trong container.
+- Đúng port mapping -p? Có firewall chặn?
+- Đúng network và DNS alias? Ping/telnet giữa containers.`
+          },
+          {
+            q: 'File permission issues với bind mount?',
+            a: `
+- UID/GID trong container khác host → lỗi quyền.
+- Giải pháp: đồng bộ UID/GID, chown/chmod phù hợp, hoặc dùng userns-remap.
+- Tránh chạy root, nhưng cần chuẩn hóa quyền file dữ liệu.`
+          }
+        ]
+      }
+    };
+
+    const DATA = [
+      { id: 'fund',    title: QA.fund.title,    items: QA.fund.items },
+      { id: 'image',   title: QA.image.title,   items: QA.image.items },
+      { id: 'runtime', title: QA.runtime.title, items: QA.runtime.items },
+      { id: 'net',     title: QA.net.title,     items: QA.net.items },
+      { id: 'compose', title: QA.compose.title, items: QA.compose.items },
+      { id: 'prod',    title: QA.prod.title,    items: QA.prod.items },
+      { id: 'trouble', title: QA.trouble.title, items: QA.trouble.items }
+    ];
+
+    const container = document.getElementById('container');
+    const searchInput = document.getElementById('search');
+
+    function createTopic(topic){
+      const wrap = document.createElement('div');
+      wrap.className = 'topic';
+      wrap.dataset.id = topic.id;
+
+      const hdr = document.createElement('div');
+      hdr.className = 'topic-hdr';
+      hdr.innerHTML = `<div class="topic-title">${topic.title}</div>
+                       <button class="small-btn" data-action="toggle-topic">Thu gọn/Mở rộng</button>`;
+      wrap.appendChild(hdr);
+
+      const body = document.createElement('div');
+      body.className = 'topic-body';
+
+      topic.items.forEach(it=>{
+        const q = document.createElement('div');
+        q.className = 'q';
+        q.dataset.text = `${it.q} ${it.a}`.toLowerCase();
+
+        const qhdr = document.createElement('div');
+        qhdr.className = 'q-hdr';
+
+        const title = document.createElement('div');
+        title.className = 'q-title';
+        title.textContent = it.q;
+
+        const actions = document.createElement('div');
+        actions.className = 'q-actions';
+
+        const btnToggle = document.createElement('button');
+        btnToggle.className = 'small-btn';
+        btnToggle.textContent = 'Ẩn/Hiện trả lời';
+        btnToggle.addEventListener('click', ()=>{
+          ans.style.display = ans.style.display === 'none' ? 'block' : 'none';
+        });
+
+        const btnCopy = document.createElement('button');
+        btnCopy.className = 'small-btn';
+        btnCopy.textContent = 'Copy câu hỏi';
+        btnCopy.addEventListener('click', async ()=>{
+          try{
+            await navigator.clipboard.writeText(it.q);
+            btnCopy.textContent = 'Đã copy!';
+            setTimeout(()=> btnCopy.textContent = 'Copy câu hỏi', 1200);
+          }catch(e){
+            btnCopy.textContent = 'Lỗi copy';
+            setTimeout(()=> btnCopy.textContent = 'Copy câu hỏi', 1200);
+          }
+        });
+
+        actions.appendChild(btnToggle);
+        actions.appendChild(btnCopy);
+        qhdr.appendChild(title);
+        qhdr.appendChild(actions);
+
+        const ans = document.createElement('div');
+        ans.className = 'a';
+        ans.innerHTML = `<pre>${it.a.trim()}</pre>`;
+
+        q.appendChild(qhdr);
+        q.appendChild(ans);
+        body.appendChild(q);
+      });
+
+      wrap.appendChild(body);
+      hdr.querySelector('[data-action="toggle-topic"]').addEventListener('click', ()=>{
+        body.style.display = body.style.display === 'none' ? 'grid' : 'none';
+      });
+
+      return wrap;
+    }
+
+    function render(){
+      container.innerHTML = '';
+      const activeTopics = Array.from(document.querySelectorAll('.f-topic'))
+        .filter(c=>c.checked).map(c=>c.dataset.topic);
+      const txt = searchInput.value.trim().toLowerCase();
+
+      DATA.forEach(topic=>{
+        if(!activeTopics.includes(topic.id)) return;
+        const tEl = createTopic(topic);
+        const items = Array.from(tEl.querySelectorAll('.q'));
+        let any = 0;
+        items.forEach(el=>{
+          const matchText = !txt || el.dataset.text.includes(txt);
+          el.style.display = matchText ? 'block' : 'none';
+          if(matchText) any++;
+        });
+        if(any>0) container.appendChild(tEl);
+      });
+
+      if(!container.children.length){
+        const empty = document.createElement('div');
+        empty.className = 'panel';
+        empty.style.padding = '16px';
+        empty.textContent = 'Không có mục nào khớp bộ lọc hiện tại.';
+        container.appendChild(empty);
+      }
+    }
+
+    document.querySelectorAll('.f-topic').forEach(c=> c.addEventListener('change', render));
+    document.getElementById('clear').addEventListener('click', ()=>{
+      searchInput.value = '';
+      document.querySelectorAll('.f-topic').forEach(c=> c.checked = true);
+      render();
+    });
+    searchInput.addEventListener('input', render);
+
+    render();
+  </script>
+</body>
+</html>

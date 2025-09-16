@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Câu hỏi phỏng vấn: Redis • Kafka • RabbitMQ • BullMQ (Chi tiết)</title>
+  <style>
+    :root{
+      --bg:#0b1020; --panel:#111735; --panel-2:#0e1430;
+      --text:#e6ebff; --muted:#a9b3d1; --accent:#7aa2ff;
+      --ok:#3ddc97; --warn:#ffd166; --err:#ff6b6b;
+      --chip:#1b2347; --chip-border:#2a376b; --shadow:0 10px 30px rgba(0,0,0,.35);
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%;margin:0;background:
+      radial-gradient(1400px 900px at 80% -10%, #1a245a 0%, #0b1020 45%, #0b1020 100%), var(--bg);
+      color:var(--text);font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Arial}
+    header{text-align:center;padding:18px 12px 6px}
+    h1{font-size:clamp(18px,4vw,28px);margin:0 0 6px}
+    .subtitle{color:var(--muted);font-size:clamp(12px,2.5vw,14px)}
+    .wrap{max-width:1150px;margin:0 auto;padding:12px;display:grid;gap:12px}
+    .panel{background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,.02));
+      border:1px solid rgba(255,255,255,.12);border-radius:12px;box-shadow:var(--shadow)}
+    .controls{padding:12px;display:grid;gap:10px}
+    .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+    .search{flex:1 1 260px;display:flex;align-items:center;gap:8px;background:var(--panel-2);
+      border:1px solid rgba(255,255,255,.12);border-radius:10px;padding:8px 10px}
+    .search input{background:transparent;border:0;outline:none;color:var(--text);width:100%}
+    .btn{background:var(--accent);color:#0b1020;border:0;padding:10px 12px;border-radius:10px;font-weight:700;cursor:pointer}
+    .chip{background:var(--chip);border:1px solid var(--chip-border);color:var(--text);
+      padding:8px 10px;border-radius:10px;font-size:12px;display:flex;gap:8px;align-items:center;cursor:pointer;user-select:none}
+    .chip input{accent-color:var(--accent)}
+    .grid{padding:12px;display:grid;gap:12px}
+    .topic{background:linear-gradient(180deg,rgba(255,255,255,.04),rgba(255,255,255,.02));
+      border:1px solid rgba(255,255,255,.12);border-radius:12px;overflow:hidden}
+    .topic-hdr{padding:12px;display:flex;align-items:center;justify-content:space-between}
+    .topic-title{font-weight:800;font-size:14px}
+    .topic-body{padding:12px;display:grid;gap:10px}
+    .q{border:1px solid rgba(255,255,255,.12);background:linear-gradient(180deg,rgba(20,26,60,.9),rgba(14,20,45,.9));
+      border-radius:12px;padding:10px}
+    .q-hdr{display:flex;align-items:flex-start;justify-content:space-between;gap:8px}
+    .q-title{font-weight:700;font-size:13px;line-height:1.45}
+    .q-actions{display:flex;gap:6px;flex-wrap:wrap}
+    .small-btn{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);
+      color:var(--text);padding:6px 8px;border-radius:8px;font-size:12px;cursor:pointer}
+    .a{margin-top:8px;color:var(--muted);font-size:13px;line-height:1.6;display:block}
+    .a pre{white-space:pre-wrap;margin:0}
+    @media (max-width:720px){.q-hdr{flex-direction:column;align-items:stretch}}
+    .footer{color:var(--muted);font-size:12px;text-align:center;padding:10px}
+    .tag{font-size:10px;padding:3px 6px;border-radius:999px;background:rgba(122,162,255,.15);
+      border:1px solid rgba(122,162,255,.35);color:var(--text)}
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Câu hỏi phỏng vấn: Redis • Kafka • RabbitMQ • BullMQ</h1>
+    <div class="subtitle">Bộ câu hỏi và trả lời chi tiết — có tìm kiếm và lọc theo chủ đề</div>
+  </header>
+
+  <div class="wrap">
+    <div class="panel controls">
+      <div class="row">
+        <div class="search">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M21 21l-3.8-3.8M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15Z" stroke="#a9b3d1" stroke-width="2" stroke-linecap="round"/></svg>
+          <input id="search" type="text" placeholder="Tìm kiếm (ví dụ: persistence, exactly-once, delay, dead-letter, consumer group)..." />
+        </div>
+        <button id="clear" class="btn" style="background:#3ddc97;color:#07121f">Xóa lọc</button>
+      </div>
+      <div class="row">
+        <label class="chip"><input type="checkbox" class="f-topic" data-topic="redis" checked/> Redis</label>
+        <label class="chip"><input type="checkbox" class="f-topic" data-topic="kafka" checked/> Kafka</label>
+        <label class="chip"><input type="checkbox" class="f-topic" data-topic="rabbit" checked/> RabbitMQ</label>
+        <label class="chip"><input type="checkbox" class="f-topic" data-topic="bull" checked/> BullMQ</label>
+      </div>
+    </div>
+
+    <div id="container" class="grid"></div>
+
+    <div class="footer panel">
+      <div class="footer">
+        Lưu ý: Ví dụ cấu hình/CLI chỉ mang tính minh họa. Hãy dùng EXPLAIN, metrics, và benchmark thực tế cho tối ưu.
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const QA = {
+      // ============================ REDIS ============================
+      redis: {
+        title: 'Redis',
+        items: [
+          {
+            q: 'Redis lưu trữ trong bộ nhớ nhưng vẫn bền vững dữ liệu như thế nào? (RDB, AOF, hybrid)',
+            a: `
+- Redis là in-memory store, có cơ chế persistence:
+  - RDB (snapshot): chụp nhanh định kỳ (BGSAVE), file nén nhỏ, khởi động nhanh. Rủi ro mất dữ liệu giữa 2 lần snapshot.
+  - AOF (append-only file): ghi từng lệnh ghi vào log; cấu hình fsync (always/everysec/no). Ít mất dữ liệu hơn, file lớn; có AOF rewrite.
+  - Hybrid: kết hợp RDB + AOF (rewrite) để vừa nhanh khởi động vừa giảm mất dữ liệu.
+- Thực tiễn:
+  - Prod thường dùng AOF everysec + snapshot thưa, hoặc RDB + AOF mix.
+  - Sao lưu file RDB/AOF, kiểm tra tính toàn vẹn (redis-check-aof, redis-check-rdb).`
+          },
+          {
+            q: 'Phân biệt TTL, eviction policy, maxmemory trong Redis',
+            a: `
+- TTL: hạn sử dụng của key (EXPIRE, PEXPIRE). Hết hạn → key bị xóa lazy/active.
+- maxmemory: giới hạn RAM. Khi đạt ngưỡng, Redis kích hoạt eviction theo policy:
+  - noeviction (mặc định): từ chối ghi mới.
+  - allkeys-lru|lfu|random: chọn key bất kỳ theo LRU/LFU/random.
+  - volatile-lru|lfu|random|ttl: chỉ key có TTL mới bị xét.
+- Lời khuyên: Với cache, chọn allkeys-lfu hoặc allkeys-lru; giám sát hits/misses.`
+          },
+          {
+            q: 'Redis Cluster vs Sentinel vs Replication?',
+            a: `
+- Replication: master-replica (one-way), failover thủ công.
+- Sentinel: giám sát + failover tự động (promote replica thành master), không sharding.
+- Redis Cluster: sharding (16384 hash slots) + replication + failover. Client cần cluster-aware.
+- Lựa chọn:
+  - HA không sharding: Sentinel.
+  - Scale ngang + HA: Cluster.`
+          },
+          {
+            q: 'Lua scripts, EVAL và tính nguyên tử?',
+            a: `
+- Redis đảm bảo tính nguyên tử trên một lệnh; Lua cho phép gom nhiều thao tác thành một đơn vị nguyên tử.
+- EVAL/EVALSHA chạy trên server → không có race giữa các lệnh trong script.
+- Lưu ý: Script phải idempotent nếu retry; tránh chạy quá lâu (block event loop).`
+          },
+          {
+            q: 'Distributed lock với Redis (SET NX PX, Redlock) — rủi ro và best practices',
+            a: `
+- Cơ bản: SET key value NX PX ttl → lock với timeout. Gia hạn bằng script check value.
+- Redlock (nhiều node): tăng an toàn khi node fail/split-brain.
+- Rủi ro: đồng hồ không đồng bộ, GC pause, network partition → lock “ma”.
+- Best practices: dùng TTL, gia hạn đúng, kiểm tra lại điều kiện trước khi thực thi (fencing token), tránh lock dài.`
+          },
+          {
+            q: 'Streams (XADD/XREADGROUP/XACK): khác gì Pub/Sub? Khi nào dùng Streams?',
+            a: `
+- Pub/Sub: fire-and-forget, không lưu bền, subscriber offline là mất message.
+- Streams: log bền, ID tuần tự, consumer group, pending entries, retry, ACK.
+- Dùng Streams khi cần đảm bảo xử lý, reprocessing, và backpressure; Pub/Sub khi chỉ broadcast tức thời.`
+          },
+          {
+            q: 'Pipeline, Pub/Sub, Bloom/HyperLogLog, Geo — dùng khi nào?',
+            a: `
+- Pipeline: gom nhiều lệnh để giảm round-trip latency.
+- Pub/Sub: broadcast sự kiện thời gian thực, không bền.
+- Bloom filter (RedisBloom): kiểm tra membership xác suất, tiết kiệm bộ nhớ.
+- HyperLogLog: ước lượng cardinality lớn với bộ nhớ cố định (~12KB).
+- Geo: truy vấn vị trí (GEOADD, GEORADIUS BYBOX/BYMEMBER).`
+          }
+        ]
+      },
+
+      // ============================ KAFKA ============================
+      kafka: {
+        title: 'Apache Kafka',
+        items: [
+          {
+            q: 'Kafka lưu message ở đâu? Phân vùng (partition), segment, retention?',
+            a: `
+- Kafka lưu trên đĩa theo partition (append-only). Mỗi partition chia thành segment files.
+- Retention theo thời gian (retention.ms) hoặc dung lượng (retention.bytes); hết hạn → xóa segment cũ.
+- Index (offset->file position) giúp seek nhanh; sequential I/O + page cache cho throughput cao.`
+          },
+          {
+            q: 'At-least-once, At-most-once, Exactly-once semantics (EOS) trong Kafka?',
+            a: `
+- At-most-once: commit offset trước khi xử lý → có thể mất message nhưng không trùng.
+- At-least-once: xử lý xong mới commit offset → không mất message nhưng có thể trùng lặp.
+- Exactly-once (EOS): nhờ idempotent producer + transactional producer/consumer (read-process-write) để đạt processing exactly-once trong phạm vi Kafka + sinks hỗ trợ.
+- Thực tế: nhiều hệ dùng at-least-once + xử lý idempotent ở downstream.`
+          },
+          {
+            q: 'Idempotent producer, acks, min.insync.replicas ảnh hưởng gì tới độ bền và latency?',
+            a: `
+- Idempotent producer (enable.idempotence=true): tránh ghi trùng khi retry; yêu cầu acks=all, và giới hạn in-flight requests.
+- acks:
+  - 0: nhanh nhất, dễ mất message.
+  - 1: leader ghi xong trả lời, rủi ro mất khi leader chết trước khi replica nhận.
+  - all: đợi đủ replicas (theo min.insync.replicas) → bền nhất, latency cao hơn.
+- min.insync.replicas: số replica tối thiểu nhận ghi khi acks=all; nếu không đủ → từ chối ghi để giữ bền vững.`
+          },
+          {
+            q: 'Consumer group, rebalancing, partition assignment?',
+            a: `
+- Consumer group: nhiều consumer chia nhau partitions (mỗi partition chỉ vào 1 consumer trong group).
+- Rebalance: khi member join/leave/timeout, Kafka phân phối lại partitions.
+- Assignment: range/round-robin/sticky; sticky giữ ổn định, giảm shuffle khi rebalance.`
+          },
+          {
+            q: 'Offset commit chiến lược nào an toàn?',
+            a: `
+- Manual commit sau khi xử lý (at-least-once) → có thể trùng lặp khi crash, nhưng an toàn hơn mất dữ liệu.
+- Async commit để giảm latency; kiểm tra lỗi commit và retry.
+- Store offset trong Kafka (default) hoặc external store nếu cần transaction với DB (hai-phase/transactional).`
+          },
+          {
+            q: 'Compaction vs Deletion topics khác nhau?',
+            a: `
+- Deletion (retention): xóa message cũ theo thời gian/dung lượng — giữ log “cửa sổ” gần đây.
+- Compaction: giữ lại bản ghi mới nhất theo key, xóa các phiên bản cũ → topic giống như K/V changelog.
+- Dùng compaction cho state/changelog, CDC; deletion cho event stream.`
+          },
+          {
+            q: 'Thiết kế key partition để tránh hotspot và bảo toàn thứ tự?',
+            a: `
+- Thứ tự chỉ đảm bảo trong 1 partition cho cùng key.
+- Chọn key sao cho phân phối đều (hash), tránh dồn vào một partition (hotspot).
+- Trade-off: nếu cần thứ tự toàn cục → ít partition (thậm chí 1) nhưng throughput hạn chế.`
+          },
+          {
+            q: 'Kafka Connect, Schema Registry, Avro/Protobuf?',
+            a: `
+- Kafka Connect: framework ETL plug-in (source/sink) ít code.
+- Schema Registry: quản lý schema (Avro/Protobuf/JSON Schema), tương thích phiên bản (back/forward).
+- Dùng Avro/Protobuf giảm kích thước, có schema evolution; tránh phá vỡ consumer.`
+          }
+        ]
+      },
+
+      // ============================ RABBITMQ ============================
+      rabbit: {
+        title: 'RabbitMQ',
+        items: [
+          {
+            q: 'RabbitMQ kiến trúc cơ bản: exchange, queue, binding, routing key?',
+            a: `
+- Producer publish vào exchange; exchange định tuyến tới queue dựa vào binding.
+- Exchange types:
+  - direct: routing key khớp chính xác.
+  - topic: pattern (a.*.b, a.#).
+  - fanout: broadcast đến tất cả queue bind vào exchange.
+  - headers: dựa vào headers.
+- Consumer lấy từ queue (pull) và ACK.`
+          },
+          {
+            q: 'Durable queue, persistent messages, publisher confirms, consumer ACK?',
+            a: `
+- Durable queue: queue tồn tại qua restart broker.
+- Persistent messages (delivery_mode=2): message được lưu đĩa (nhưng cần fsync/policy để bền vững thực sự).
+- Publisher confirms: server xác nhận đã nhận/ghi → producer có thể retry/idempotent.
+- Consumer ACK: xác nhận tiêu thụ; nếu không ACK → có thể redeliver (có nguy cơ trùng).`
+          },
+          {
+            q: 'Prefetch (QoS), fair dispatch, backpressure?',
+            a: `
+- Basic.qos(prefetch): giới hạn số message chưa ACK trên mỗi consumer → tránh dồn việc vào consumer chậm.
+- Fair dispatch: với prefetch=1/nhỏ, tải phân phối công bằng hơn.
+- Backpressure: khi consumer không theo kịp, queue tăng; cần scale-out, tăng prefetch hợp lý, hoặc nhịp nhàng tốc độ producer.`
+          },
+          {
+            q: 'Dead-letter exchange (DLX), nack, retry strategy?',
+            a: `
+- DLX: khi message bị reject/nack hoặc TTL hết, chuyển sang DLX (dead-letter) theo cấu hình x-dead-letter-exchange.
+- Retry: nên dùng delayed queues hoặc plugin delayed message; tránh retry vô hạn gây loop.
+- Pattern: main queue → process → thất bại → publish vào delay queue (TTL + DLX quay lại main) với retry count, sau N lần → gửi DLQ để kiểm tra.`
+          },
+          {
+            q: 'Order đảm bảo thế nào trong RabbitMQ?',
+            a: `
+- RabbitMQ không đảm bảo thứ tự toàn cục khi có redelivery/đa consumer. Thứ tự chỉ tương đối với 1 consumer/1 queue và không có redelivery.
+- Nếu cần thứ tự: 1 queue - 1 consumer, hoặc message group pattern (khó hơn Rabbit), hoặc dùng Kafka nếu yêu cầu chặt chẽ.`
+          },
+          {
+            q: 'Cluster, HA queues (quorum/classic), mirrored-queue?',
+            a: `
+- Classic mirrored queues (cũ) đã deprecated; khuyến nghị dùng Quorum queues (Raft).
+- Quorum queues: bền vững, nhất quán, failover tốt hơn; overhead cao hơn classic.
+- Cluster RabbitMQ không tự động shard; cần sharding ở ứng dụng hoặc plugin/policy.`
+          },
+          {
+            q: 'Khi nào chọn RabbitMQ thay vì Kafka?',
+            a: `
+- RabbitMQ phù hợp:
+  - Work queue, task queue, RPC pattern, yêu cầu routing linh hoạt (topic/headers).
+  - Yêu cầu xử lý “đúng lúc” theo consumer, không cần lưu log dài hạn.
+- Kafka phù hợp:
+  - Event streaming, throughput lớn, lưu trữ lâu, reprocess, consumer nhóm độc lập.`
+          }
+        ]
+      },
+
+      // ============================ BULLMQ ============================
+      bull: {
+        title: 'BullMQ (Redis-based Job Queue cho Node.js)',
+        items: [
+          {
+            q: 'BullMQ kiến trúc và khác gì so với sử dụng Redis Pub/Sub/Streams trực tiếp?',
+            a: `
+- BullMQ xây trên Redis (lists, zsets, streams nội bộ) để cung cấp:
+  - Persistent job queue, retries, backoff, delay, concurrency, rate limiting, sandboxed processors.
+- So với Pub/Sub: Pub/Sub không bền; BullMQ bền với retry/ack.
+- So với Streams: BullMQ trừu tượng hoá consumer group, retry, delay, cron, scheduler tiện lợi hơn cho job processing.`
+          },
+          {
+            q: 'Job lifecycle: waiting → active → completed/failed; retries/backoff/delay/cron?',
+            a: `
+- Job thêm vào queue (waiting), worker nhận (active), xong → completed; lỗi → failed.
+- Retries: attempts + backoff (fixed/exponential/custom).
+- Delay: schedule job tương lai (delay ms) hoặc repeatable (cron) thông qua Queue.add(name, data, { delay, repeat, backoff, attempts }).
+- Events: 'completed','failed','stalled' để quan sát.`
+          },
+          {
+            q: 'Concurrency, rate limiting, và sandboxed processors?',
+            a: `
+- Concurrency: worker.process(concurrency, handler) để xử lý song song trong 1 process.
+- Rate limiting: limiter: { max, duration } giới hạn số job trong khoảng thời gian.
+- Sandboxed: chạy handler trong child process để cách ly CPU-bound/crash không ảnh hưởng main process.`
+          },
+          {
+            q: 'Idempotency và job deduplication trong BullMQ?',
+            a: `
+- Idempotency: handler phải tự đảm bảo (ví dụ, dùng upsert/unique key ở DB).
+- Deduplication: dùng jobId tuỳ biến (ví dụ, jobId = hash(payload)); thêm job trùng jobId → override/ignore (removeOnComplete kết hợp nếu cần).
+- Hoặc dùng custom keys/hàng rào ở app để chặn submit trùng.`
+          },
+          {
+            q: 'Delayed jobs, repeatable jobs, priority, và scheduling chính xác?',
+            a: `
+- Delay: Queue.add(...,{ delay: ms }).
+- Repeatable/Cron: Queue.add(...,{ repeat: { cron:'*/5 * * * *', tz:'Asia/Ho_Chi_Minh' } }).
+- Priority: tham số priority (số nhỏ ưu tiên cao).
+- Độ chính xác phụ thuộc tick interval của scheduler và Redis timing; không phải real-time cứng.`
+          },
+          {
+            q: 'Xử lý lỗi: stalled jobs, dead-letter (DLQ) cho BullMQ?',
+            a: `
+- Stalled: job active nhưng worker chết → watchdog phát hiện và requeue (stalled detection). Cần idempotent handler để tránh double-run.
+- DLQ: BullMQ không mặc định DLQ; tự cài bằng: on('failed', ...) → push job vào queue khác (DLQ) với metadata số lần retry/stacktrace; dashboard/alert để xử lý.`
+          },
+          {
+            q: 'Triển khai BullMQ ở production: Redis Cluster, HA, observability?',
+            a: `
+- Dùng Redis Cluster/Sentinel/Managed Redis để HA. Với delay/repeat, đảm bảo clock sync (NTP) trên worker.
+- Observability: Metrics (prometheus exporter), UI (bull-board, Arena), logs events; trace theo jobId.
+- Cân nhắc tách queue theo miền nghiệp vụ, đặt limiter để bảo vệ downstream (DB, API).`
+          }
+        ]
+      }
+    };
+
+    const DATA = [
+      { id: 'redis',  title: QA.redis.title,  items: QA.redis.items },
+      { id: 'kafka',  title: QA.kafka.title,  items: QA.kafka.items },
+      { id: 'rabbit', title: QA.rabbit.title, items: QA.rabbit.items },
+      { id: 'bull',   title: QA.bull.title,   items: QA.bull.items }
+    ];
+
+    const container = document.getElementById('container');
+    const searchInput = document.getElementById('search');
+
+    function createTopic(topic){
+      const wrap = document.createElement('div');
+      wrap.className = 'topic';
+      wrap.dataset.id = topic.id;
+
+      const hdr = document.createElement('div');
+      hdr.className = 'topic-hdr';
+      hdr.innerHTML = `<div class="topic-title">${topic.title}</div>
+                       <button class="small-btn" data-action="toggle-topic">Thu gọn/Mở rộng</button>`;
+      wrap.appendChild(hdr);
+
+      const body = document.createElement('div');
+      body.className = 'topic-body';
+
+      topic.items.forEach(it=>{
+        const q = document.createElement('div');
+        q.className = 'q';
+        q.dataset.text = `${it.q} ${it.a}`.toLowerCase();
+
+        const qhdr = document.createElement('div');
+        qhdr.className = 'q-hdr';
+
+        const title = document.createElement('div');
+        title.className = 'q-title';
+        title.textContent = it.q;
+
+        const actions = document.createElement('div');
+        actions.className = 'q-actions';
+
+        const btnToggle = document.createElement('button');
+        btnToggle.className = 'small-btn';
+        btnToggle.textContent = 'Ẩn/Hiện trả lời';
+        btnToggle.addEventListener('click', ()=>{
+          ans.style.display = ans.style.display === 'none' ? 'block' : 'none';
+        });
+
+        const btnCopy = document.createElement('button');
+        btnCopy.className = 'small-btn';
+        btnCopy.textContent = 'Copy câu hỏi';
+        btnCopy.addEventListener('click', async ()=>{
+          try{
+            await navigator.clipboard.writeText(it.q);
+            btnCopy.textContent = 'Đã copy!';
+            setTimeout(()=> btnCopy.textContent = 'Copy câu hỏi', 1200);
+          }catch(e){
+            btnCopy.textContent = 'Lỗi copy';
+            setTimeout(()=> btnCopy.textContent = 'Copy câu hỏi', 1200);
+          }
+        });
+
+        actions.appendChild(btnToggle);
+        actions.appendChild(btnCopy);
+        qhdr.appendChild(title);
+        qhdr.appendChild(actions);
+
+        const ans = document.createElement('div');
+        ans.className = 'a';
+        ans.innerHTML = `<pre>${it.a.trim()}</pre>`;
+
+        q.appendChild(qhdr);
+        q.appendChild(ans);
+        body.appendChild(q);
+      });
+
+      wrap.appendChild(body);
+      hdr.querySelector('[data-action="toggle-topic"]').addEventListener('click', ()=>{
+        body.style.display = body.style.display === 'none' ? 'grid' : 'none';
+      });
+
+      return wrap;
+    }
+
+    function render(){
+      container.innerHTML = '';
+      const activeTopics = Array.from(document.querySelectorAll('.f-topic'))
+        .filter(c=>c.checked).map(c=>c.dataset.topic);
+      const txt = searchInput.value.trim().toLowerCase();
+
+      DATA.forEach(topic=>{
+        if(!activeTopics.includes(topic.id)) return;
+        const tEl = createTopic(topic);
+        const items = Array.from(tEl.querySelectorAll('.q'));
+        let any = 0;
+        items.forEach(el=>{
+          const matchText = !txt || el.dataset.text.includes(txt);
+          el.style.display = matchText ? 'block' : 'none';
+          if(matchText) any++;
+        });
+        if(any>0) container.appendChild(tEl);
+      });
+
+      if(!container.children.length){
+        const empty = document.createElement('div');
+        empty.className = 'panel';
+        empty.style.padding = '16px';
+        empty.textContent = 'Không có mục nào khớp bộ lọc hiện tại.';
+        container.appendChild(empty);
+      }
+    }
+
+    document.querySelectorAll('.f-topic').forEach(c=> c.addEventListener('change', render));
+    document.getElementById('clear').addEventListener('click', ()=>{
+      searchInput.value = '';
+      document.querySelectorAll('.f-topic').forEach(c=> c.checked = true);
+      render();
+    });
+    searchInput.addEventListener('input', render);
+
+    render();
+  </script>
+</body>
+</html>

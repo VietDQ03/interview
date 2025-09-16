@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>INTERVIEW — Mục lục</title>
+  <meta name="color-scheme" content="dark light">
+  <style>
+    :root{
+      --bg:#0b1020; --panel:#0e132b; --panel-2:#0c1230;
+      --text:#e6ebff; --muted:#a9b3d1; --accent:#7aa2ff; --ok:#3ddc97;
+      --chip:#1b2347; --chip-b:#2a376b; --border:rgba(127,140,255,.22);
+      --grad: radial-gradient(1400px 900px at 80% -10%, #1a245a 0%, #0b1020 45%, #0b1020 100%);
+    }
+    @media (prefers-color-scheme: light){
+      :root{
+        --bg:#f6f8ff; --panel:#ffffff; --panel-2:#f5f7ff; --text:#0b1020; --muted:#5a6585;
+        --chip:#eef2ff; --chip-b:#d5defa; --border:rgba(40,60,140,.16);
+        --grad: linear-gradient(180deg,#eef2ff 0%,#f9fbff 100%);
+      }
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%;margin:0;font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Arial;color:var(--text);background:var(--grad)}
+    .app{max-width:1240px;margin:0 auto;padding:18px;display:grid;gap:16px}
+    header{display:flex;align-items:center;gap:14px;justify-content:space-between}
+    h1{font-size:clamp(18px,4vw,28px);margin:0;letter-spacing:.2px}
+    .hint{color:var(--muted);font-size:12px}
+    .top{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+    .search{flex:1 1 320px;display:flex;align-items:center;gap:8px;background:var(--panel-2);
+      border:1px solid var(--border);border-radius:14px;padding:10px 12px}
+    .search input{border:0;outline:none;background:transparent;color:var(--text);width:100%}
+    .btn{background:var(--accent);color:#0b1020;border:0;padding:10px 12px;border-radius:12px;font-weight:700;cursor:pointer}
+    .wrap{display:grid;grid-template-columns: 1.1fr 1fr;gap:14px}
+    .panel{background:var(--panel);border:1px solid var(--border);border-radius:16px}
+    .list{padding:14px}
+    .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px}
+    .card{position:relative;background:linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,.02));
+      border:1px solid var(--border);border-radius:14px;padding:12px;display:grid;gap:8px;min-height:122px;transition:transform .08s ease, box-shadow .15s ease}
+    .card:hover{transform:translateY(-1px);box-shadow:0 0 0 2px rgba(122,162,255,.25)}
+    .title{display:flex;align-items:center;gap:8px;font-weight:900;font-size:15px}
+    .desc{color:var(--muted);font-size:12px;min-height:34px}
+    .row{display:flex;gap:8px;align-items:center;justify-content:space-between}
+    .chip{background:var(--chip);border:1px solid var(--chip-b);color:var(--text);
+      padding:4px 8px;border-radius:999px;font-size:11px}
+    .actions{display:flex;gap:6px;flex-wrap:wrap}
+    .sm{background:transparent;border:1px solid var(--border);color:var(--text);padding:6px 10px;border-radius:999px;font-size:12px;cursor:pointer}
+    .fav{color:#ffdd57;border-color:#ffdd57;background:rgba(255,221,87,.12)}
+    .icon{width:18px;height:18px;opacity:.9}
+    /* Preview: phẳng, tràn đều, không đổ bóng */
+    .preview{display:grid;grid-template-rows:auto 1fr;overflow:hidden}
+    .p-hdr{padding:10px 12px;display:flex;align-items:center;gap:8px;justify-content:space-between;border-bottom:1px solid var(--border)}
+    .p-title{font-weight:800}
+    .p-actions{display:flex;gap:8px;flex-wrap:wrap}
+    .pill{border:1px solid var(--border);background:transparent;padding:6px 10px;border-radius:999px;font-size:12px;color:var(--text);cursor:pointer}
+    .edge{margin-left:6px}
+    .p-body{padding:0}
+    iframe{display:block;width:100%;height:calc(75vh - 60px);border:0;background:var(--panel-2)}
+    @media (max-width:980px){ .wrap{grid-template-columns:1fr} iframe{height:70vh} }
+    footer{color:var(--muted);font-size:12px;text-align:center;padding:8px}
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header>
+      <div>
+        <h1>INTERVIEW — Mục lục</h1>
+        <div class="hint">Mũi tên lên/xuống để chọn, Enter để xem trước. F để bật/tắt lọc “yêu thích”.</div>
+      </div>
+      <div class="top" style="min-width:280px">
+        <div class="search">
+          <svg class="icon" viewBox="0 0 24 24" fill="none"><path d="M21 21l-3.8-3.8M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15Z" stroke="#a9b3d1" stroke-width="2" stroke-linecap="round"/></svg>
+          <input id="search" type="text" placeholder="Tìm trang (Docker, Redis, Database, ...)" />
+        </div>
+        <label class="actions" style="margin:0">
+          <input id="favOnly" type="checkbox" style="accent-color: var(--ok); width:16px; height:16px;">
+          <span class="hint">Chỉ yêu thích</span>
+        </label>
+      </div>
+    </header>
+
+    <div class="wrap">
+      <div class="panel list">
+        <div style="padding:8px 2px 6px 2px; color:var(--muted); font-size:12px; font-weight:700; letter-spacing:.4px; text-transform:uppercase;">Danh sách trang</div>
+        <div id="cards" class="grid" role="listbox" aria-label="Danh sách trang"></div>
+      </div>
+
+      <div class="panel preview">
+        <div class="p-hdr">
+          <div>
+            <div class="p-title" id="previewTitle">Xem trước</div>
+            <div class="hint">Nhấn “Xem trước” hoặc Enter trên thẻ để nạp vào khung dưới. “Mở trang” sẽ điều hướng trên cùng tab.</div>
+          </div>
+          <div class="p-actions">
+            <button id="openSameTab" class="pill">Mở trang</button>
+            <button id="openNewTab" class="pill">Mở tab mới</button>
+            <button id="clearPreview" class="pill">Đóng preview</button>
+            <label class="pill edge">
+              <input id="edgeToggle" type="checkbox" style="accent-color: var(--accent); vertical-align:middle"> Edge‑to‑edge
+            </label>
+          </div>
+        </div>
+        <div class="p-body">
+          <iframe id="preview" name="preview" src="about:blank" title="Preview"></iframe>
+        </div>
+      </div>
+    </div>
+
+    <footer>Đặt file này (index.html) cùng thư mục với các trang .html đích để điều hướng nhanh. Không dùng tài nguyên ngoài.</footer>
+  </div>
+
+  <script>
+    const PAGES = [
+      { id:'database',  file:'database.html',  title:'Database',   tags:['sql','nosql','jsonb','mvcc'], desc:'Câu hỏi Database (SQL/NoSQL, tối ưu, giao dịch, PostgreSQL JSONB...)' },
+      { id:'docker',    file:'docker.html',    title:'Docker',     tags:['image','compose','network'],  desc:'Câu hỏi Docker: build, layer, volumes, networking, security' },
+      { id:'eventloop', file:'eventloop.html', title:'Event Loop', tags:['nodejs','async','tick'],      desc:'Vòng lặp sự kiện (JS/Node), microtask, macrotask' },
+      { id:'redis',     file:'redis.html',     title:'Redis',      tags:['cache','streams','ttl'],       desc:'Redis: persistence, eviction, streams, locks, cluster' },
+      { id:'route',     file:'route.html',     title:'Routing',    tags:['http','api','spa'],            desc:'Thiết kế Routing/API, status codes, versioning' },
+      { id:'threaded',  file:'threaded.html',  title:'Threaded',   tags:['concurrency','lock'],          desc:'Luồng, đồng bộ, race condition, deadlock' },
+      { id:'typescript',file:'typescript.html',title:'TypeScript', tags:['types','generics','tsconfig'], desc:'TypeScript: typing nâng cao, utility types, patterns' },
+    ];
+
+    const FAV_KEY = 'interview_favs';
+    const favs = new Set(JSON.parse(localStorage.getItem(FAV_KEY) || '[]'));
+    const cardsEl = document.getElementById('cards');
+    const searchInput = document.getElementById('search');
+    const favOnlyEl = document.getElementById('favOnly');
+    const iframe = document.getElementById('preview');
+    const previewTitle = document.getElementById('previewTitle');
+    const openSameTabBtn = document.getElementById('openSameTab');
+    const openNewTabBtn = document.getElementById('openNewTab');
+    const clearPreviewBtn = document.getElementById('clearPreview');
+    const edgeToggle = document.getElementById('edgeToggle');
+    let currentPage = null;
+
+    function iconFor(title){
+      const t = title.toLowerCase(), c = '#a9b3d1';
+      if(t.includes('docker')) return `<svg class="icon" viewBox="0 0 24 24" fill="none"><path d="M3 12h8M3 9h5M3 6h4M13 6h4M13 9h5M13 12h8M7 15h10M9 6v6M16 3v9" stroke="${c}" stroke-width="2" stroke-linecap="round"/></svg>`;
+      if(t.includes('database')) return `<svg class="icon" viewBox="0 0 24 24" fill="none"><ellipse cx="12" cy="5" rx="8" ry="3" stroke="${c}" stroke-width="2"/><path d="M4 5v6c0 1.7 3.6 3 8 3s8-1.3 8-3V5" stroke="${c}" stroke-width="2"/><path d="M4 11v6c0 1.7 3.6 3 8 3s8-1.3 8-3v-6" stroke="${c}" stroke-width="2"/></svg>`;
+      if(t.includes('redis')) return `<svg class="icon" viewBox="0 0 24 24" fill="none"><path d="M3 9l9-4 9 4-9 4-9-4Z" stroke="${c}" stroke-width="2"/><path d="M3 13l9 4 9-4" stroke="${c}" stroke-width="2"/></svg>`;
+      if(t.includes('event')) return `<svg class="icon" viewBox="0 0 24 24" fill="none"><path d="M5 5h14M5 12h14M5 19h14" stroke="${c}" stroke-width="2" stroke-linecap="round"/></svg>`;
+      if(t.includes('type')) return `<svg class="icon" viewBox="0 0 24 24" fill="none"><path d="M4 6h16M9 6v12M15 6v12M4 18h16" stroke="${c}" stroke-width="2" stroke-linecap="round"/></svg>`;
+      if(t.includes('route')) return `<svg class="icon" viewBox="0 0 24 24" fill="none"><path d="M6 6h6a5 5 0 0 1 0 10H8" stroke="${c}" stroke-width="2"/><circle cx="6" cy="6" r="2" fill="${c}"/><circle cx="8" cy="16" r="2" fill="${c}"/></svg>`;
+      if(t.includes('thread')) return `<svg class="icon" viewBox="0 0 24 24" fill="none"><path d="M4 12h16M8 6l8 12M8 18l8-12" stroke="${c}" stroke-width="2"/></svg>`;
+      return `<svg class="icon" viewBox="0 0 24 24" fill="none"><path d="M4 6h16M4 12h16M4 18h10" stroke="${c}" stroke-width="2" stroke-linecap="round"/></svg>`;
+    }
+
+    function cardTemplate(p){
+      const wrap = document.createElement('div');
+      wrap.className = 'card';
+      wrap.setAttribute('tabindex','0');
+      wrap.setAttribute('role','option');
+      wrap.dataset.file = p.file;
+      wrap.dataset.id = p.id;
+      wrap.dataset.title = `${p.title} ${p.tags.join(' ')} ${p.desc}`.toLowerCase();
+
+      const title = document.createElement('div');
+      title.className = 'title';
+      title.innerHTML = `${iconFor(p.title)} <span>${p.title}</span>`;
+
+      const desc = document.createElement('div');
+      desc.className = 'desc';
+      desc.textContent = p.desc;
+
+      const row = document.createElement('div');
+      row.className = 'row';
+
+      const chip = document.createElement('span');
+      chip.className = 'chip';
+      chip.textContent = p.file;
+
+      const actions = document.createElement('div');
+      actions.className = 'actions';
+
+      const btnPreview = document.createElement('button');
+      btnPreview.className = 'sm';
+      btnPreview.textContent = 'Xem trước';
+      btnPreview.addEventListener('click', (e)=>{ e.stopPropagation(); loadPreview(p); });
+
+      const btnOpenSame = document.createElement('button');
+      btnOpenSame.className = 'sm';
+      btnOpenSame.textContent = 'Mở trang';
+      btnOpenSame.addEventListener('click', (e)=>{ e.stopPropagation(); window.location.href = p.file; });
+
+      const btnOpenNew = document.createElement('button');
+      btnOpenNew.className = 'sm';
+      btnOpenNew.textContent = 'Mở tab mới';
+      btnOpenNew.addEventListener('click', (e)=>{ e.stopPropagation(); window.open(p.file, '_blank', 'noopener'); });
+
+      const btnFav = document.createElement('button');
+      btnFav.className = 'sm';
+      btnFav.innerHTML = favs.has(p.id) ? 'Bỏ yêu thích' : 'Yêu thích';
+      if(favs.has(p.id)) btnFav.classList.add('fav');
+      btnFav.addEventListener('click', (e)=>{
+        e.stopPropagation();
+        if(favs.has(p.id)){ favs.delete(p.id); btnFav.textContent = 'Yêu thích'; btnFav.classList.remove('fav'); }
+        else { favs.add(p.id); btnFav.textContent = 'Bỏ yêu thích'; btnFav.classList.add('fav'); }
+        localStorage.setItem(FAV_KEY, JSON.stringify(Array.from(favs)));
+        render();
+      });
+
+      actions.appendChild(btnPreview);
+      actions.appendChild(btnOpenSame);
+      actions.appendChild(btnOpenNew);
+      actions.appendChild(btnFav);
+
+      row.appendChild(chip);
+      row.appendChild(actions);
+
+      wrap.appendChild(title);
+      wrap.appendChild(desc);
+      wrap.appendChild(row);
+
+      wrap.addEventListener('click', ()=> loadPreview(p));
+      wrap.addEventListener('keydown', (ev)=>{
+        const cards = Array.from(document.querySelectorAll('.card'));
+        const i = cards.indexOf(wrap);
+        if(ev.key === 'Enter'){ loadPreview(p); }
+        else if(ev.key === 'ArrowDown'){ ev.preventDefault(); (cards[i+1]||cards[0]).focus(); }
+        else if(ev.key === 'ArrowUp'){ ev.preventDefault(); (cards[i-1]||cards[cards.length-1]).focus(); }
+        else if(ev.key.toLowerCase() === 'o'){ window.location.href = p.file; }
+      });
+
+      return wrap;
+    }
+
+    function render(){
+      cardsEl.innerHTML = '';
+      const q = searchInput.value.trim().toLowerCase();
+      const onlyFav = favOnlyEl.checked;
+
+      const filtered = PAGES.filter(p=>{
+        if(onlyFav && !favs.has(p.id)) return false;
+        if(!q) return true;
+        const hay = `${p.title} ${p.tags.join(' ')} ${p.desc} ${p.file}`.toLowerCase();
+        return hay.includes(q);
+      });
+
+      if(!filtered.length){
+        const empty = document.createElement('div');
+        empty.style.padding = '10px';
+        empty.textContent = 'Không có trang nào khớp bộ lọc hiện tại.';
+        cardsEl.appendChild(empty);
+        return;
+      }
+      filtered.forEach(p=> cardsEl.appendChild(cardTemplate(p)));
+    }
+
+    function loadPreview(p){
+      currentPage = p;
+      previewTitle.textContent = `Xem trước — ${p.title} (${p.file})`;
+      iframe.src = p.file;
+      openSameTabBtn.onclick = ()=> window.location.href = p.file;
+      openNewTabBtn.onclick  = ()=> window.open(p.file, '_blank', 'noopener');
+      clearPreviewBtn.onclick = ()=>{
+        iframe.src = 'about:blank';
+        previewTitle.textContent = 'Xem trước';
+        currentPage = null;
+      };
+      history.replaceState(null, '', `#/${p.file}`);
+    }
+
+    // Edge-to-edge: loại margin/padding của container preview để iframe chiếm toàn bộ
+    edgeToggle.addEventListener('change', ()=>{
+      const panel = document.querySelector('.panel.preview');
+      if(edgeToggle.checked){
+        panel.style.borderRadius = '0';
+        panel.style.borderLeft = '0';
+        panel.style.borderRight = '0';
+      }else{
+        panel.style.borderRadius = '16px';
+        panel.style.borderLeft = '';
+        panel.style.borderRight = '';
+      }
+    });
+
+    // Events
+    favOnlyEl.addEventListener('change', render);
+    searchInput.addEventListener('input', render);
+
+    // Keyboard global
+    window.addEventListener('keydown', (e)=>{
+      if(e.key.toLowerCase() === 'f' && (e.metaKey || e.ctrlKey)){ e.preventDefault(); searchInput.focus(); }
+      else if(e.key.toLowerCase() === 'f'){ e.preventDefault(); favOnlyEl.checked = !favOnlyEl.checked; render(); }
+    });
+
+    // Deep-link
+    function initFromHash(){
+      const h = location.hash;
+      if(h.startsWith('#/')){
+        const file = decodeURIComponent(h.slice(2));
+        const p = PAGES.find(x=> x.file === file);
+        if(p) loadPreview(p);
+      }
+    }
+
+    render();
+    initFromHash();
+  </script>
+</body>
+</html>

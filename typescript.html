@@ -1,0 +1,1252 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Luyện phỏng vấn TypeScript (Senior) — Trắc nghiệm, Whiteboard, Live-code</title>
+  <style>
+    :root{
+      --bg:#0b1020;
+      --panel:#121a2f;
+      --panel-2:#0f1730;
+      --text:#e7ecf6;
+      --muted:#a9b3c7;
+      --primary:#67e8f9;
+      --accent:#a78bfa;
+      --good:#34d399;
+      --bad:#f87171;
+      --warn:#fbbf24;
+      --border:#223053;
+      --code-bg:#0a1226;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Inter, "Helvetica Neue", Arial, "Apple Color Emoji","Segoe UI Emoji";
+      color:var(--text);
+      background: radial-gradient(1200px 800px at 10% -10%, #132348 0%, transparent 60%),
+                  radial-gradient(1000px 600px at 90% 0%, #1a2f5a 0%, transparent 55%),
+                  var(--bg);
+    }
+    header{
+      padding:16px;
+      position:sticky; top:0; z-index:2;
+      background:linear-gradient(180deg, rgba(8,14,32,.9), rgba(8,14,32,.6) 60%, transparent);
+      backdrop-filter: blur(6px);
+      border-bottom:1px solid rgba(255,255,255,0.06);
+    }
+    .container{max-width:1100px; margin:0 auto; padding:0 12px;}
+    h1{font-size: clamp(22px, 3.5vw, 32px); margin:6px 0 0; line-height:1.2;}
+    .subtitle{color:var(--muted); margin-top:6px; font-size:14px}
+
+    .tabs{
+      display:flex; gap:8px; flex-wrap:wrap; margin:16px 0 10px;
+    }
+    .tab-btn{
+      padding:10px 12px; border-radius:10px; border:1px solid var(--border);
+      background:linear-gradient(180deg, #0c142a, #0a1226);
+      color:var(--text); cursor:pointer; font-weight:600; letter-spacing:.2px;
+    }
+    .tab-btn.active{outline:2px solid color-mix(in srgb, var(--primary) 40%, transparent); color:var(--primary)}
+    main{padding:8px 0 40px}
+    section.panel{
+      display:none;
+      border:1px solid var(--border);
+      background:linear-gradient(180deg, #0d1630, #0b1430);
+      border-radius:14px; padding:12px; box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+    }
+    section.panel.active{display:block}
+
+    /* Cards and lists */
+    .grid{display:grid; grid-template-columns: 1fr 1fr; gap:12px}
+    @media (max-width: 820px){ .grid{grid-template-columns:1fr} }
+    .card{
+      border:1px solid var(--border); border-radius:12px; padding:12px;
+      background:linear-gradient(180deg, #0b1430, #0a132d);
+    }
+    .row{display:flex; gap:10px; align-items:center; flex-wrap:wrap}
+    label{font-weight:600; font-size:14px}
+    select, input[type="text"]{
+      background:var(--code-bg); color:var(--text);
+      border:1px solid var(--border); border-radius:10px; padding:8px 10px; width:100%;
+    }
+    button{
+      background:linear-gradient(180deg, #182a54, #13244a);
+      border:1px solid var(--border); color:var(--text); border-radius:10px;
+      padding:10px 12px; cursor:pointer; font-weight:700;
+    }
+    button.primary{ background:linear-gradient(180deg, #21506a, #1b3e58); border-color:#2b6aa1; color: #d8f3ff }
+    button.good{ background:linear-gradient(180deg, #1b4435, #143a2c); border-color:#1d5d49; color:#dff7ef}
+    button.warn{ background:linear-gradient(180deg, #4a3612, #3a2b0f); border-color:#7a5b1b; color:#fff2d6}
+    button.bad{ background:linear-gradient(180deg, #4a1f1f, #3a1717); border-color:#7a2b2b; color:#ffe6e6}
+
+    .muted{color:var(--muted)}
+    .pill{padding:2px 8px; border-radius:999px; border:1px solid var(--border); background: #0b1430; font-size:12px; color:var(--muted)}
+    .score{font-weight:800; color:var(--good)}
+    .danger{color:var(--bad)}
+    .hint{color:var(--warn)}
+
+    /* Quiz */
+    .question{margin:12px 0; padding:12px; border-radius:10px; border:1px dashed var(--border); background:#0a1226}
+    .question h4{margin:0 0 8px; font-size:16px}
+    .options{display:flex; flex-direction:column; gap:8px}
+    .option{
+      display:flex; gap:10px; align-items:flex-start; padding:8px 10px; border-radius:10px;
+      border:1px solid var(--border); background:linear-gradient(180deg, #0d1734, #0c1632);
+      cursor:pointer;
+    }
+    .option.correct{outline:2px solid color-mix(in srgb, var(--good) 50%, transparent)}
+    .option.incorrect{outline:2px solid color-mix(in srgb, var(--bad) 50%, transparent)}
+    .explain{margin-top:8px; color:var(--muted); font-size:14px; display:none}
+    .explain.show{display:block}
+
+    .actions{display:flex; gap:8px; flex-wrap:wrap; margin-top:10px}
+
+    /* Whiteboard */
+    .wb{ display:grid; gap:12px; grid-template-columns: 1fr; }
+    .wb textarea{
+      width:100%; min-height:220px; resize:vertical;
+      background:var(--code-bg); color:var(--text); border:1px solid var(--border);
+      border-radius:12px; padding:12px; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size:13px; line-height:1.5;
+    }
+    pre.code{
+      background:var(--code-bg); border:1px solid var(--border); padding:12px; border-radius:12px; overflow:auto;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size:13px;
+    }
+    .wb .split{ display:grid; gap:12px; grid-template-columns: 1fr 1fr; }
+    @media (max-width:860px){ .wb .split{grid-template-columns: 1fr} }
+
+    .tag{font-size:11px; color:#cbd5e1; background:#0f1a36; border:1px solid var(--border); border-radius:999px; padding:2px 8px; }
+    .list{display:flex; flex-wrap:wrap; gap:6px}
+
+    /* Live Code */
+    .tests{border:1px solid var(--border); border-radius:12px; padding:12px; background:#0a1226}
+    .test-result{padding:8px 10px; border-radius:10px; border:1px dashed var(--border); background:#091027; margin-top:8px; white-space:pre-wrap}
+    .pass{color:var(--good)} .fail{color:var(--bad)}
+    .small{font-size:12px}
+
+    /* Tips accordion */
+    details.tips-item{
+      border:1px solid var(--border);
+      background:linear-gradient(180deg, #0b1430, #0a132d);
+      border-radius:10px; padding:10px 12px; margin:8px 0;
+    }
+    details.tips-item summary{
+      cursor:pointer; font-weight:700; color:var(--primary);
+      outline:none; list-style:none;
+    }
+    details.tips-item[open] summary{ color:#8be9fd }
+    details.tips-item summary::-webkit-details-marker{ display:none }
+
+    footer{color:var(--muted); font-size:12px; text-align:center; margin:30px 0 10px}
+  </style>
+</head>
+<body>
+<header>
+  <div class="container">
+    <div class="row" style="justify-content:space-between; align-items:flex-start;">
+      <div>
+        <h1>Luyện phỏng vấn TypeScript (Senior)</h1>
+        <div class="subtitle">Trắc nghiệm nâng cao • Whiteboard lý thuyết • Bài live-code có test cases</div>
+      </div>
+      <div class="row" style="gap:6px">
+        <span class="pill">TS 5.x</span>
+        <span class="pill">Strict</span>
+        <span class="pill">ESM/CJS</span>
+      </div>
+    </div>
+
+    <div class="tabs">
+      <button class="tab-btn active" data-tab="quiz">1) Trắc nghiệm</button>
+      <button class="tab-btn" data-tab="whiteboard">2) Whiteboard</button>
+      <button class="tab-btn" data-tab="live">3) Live-code + Tests</button>
+      <button class="tab-btn" data-tab="tips">4) Tips & Tài liệu</button>
+    </div>
+  </div>
+</header>
+
+<main class="container">
+  <!-- QUIZ -->
+  <section id="quiz" class="panel active">
+    <div class="row" style="justify-content:space-between; align-items:center">
+      <div class="row" style="gap:10px">
+        <label for="quizSet">Chọn bộ câu hỏi:</label>
+        <select id="quizSet">
+          <option value="mix">Hỗn hợp (20 câu)</option>
+          <option value="types">Type System & Advanced Types</option>
+          <option value="react">React + TypeScript</option>
+          <option value="build">Module, Build, tsconfig</option>
+        </select>
+      </div>
+      <div class="row" style="gap:8px">
+        <button id="startQuiz" class="primary">Bắt đầu / Reset</button>
+        <span class="pill">Điểm: <span id="score" class="score">0</span></span>
+      </div>
+    </div>
+    <div id="quizContainer" style="margin-top:10px"></div>
+    <div class="actions">
+      <button id="revealAll" class="warn">Hiện giải thích</button>
+      <button id="shuffle" title="Xáo trộn câu hỏi">Xáo trộn</button>
+      <button id="checkAll" class="good">Chấm tất cả</button>
+    </div>
+  </section>
+
+  <!-- WHITEBOARD -->
+  <section id="whiteboard" class="panel">
+    <div class="wb">
+      <div class="card">
+        <h3>Bài tập Whiteboard: viết type nâng cao</h3>
+        <p class="muted">Chọn đề tài và thử viết type/utility. Nhấn Xem gợi ý để mở hướng dẫn và đáp án mẫu.</p>
+        <div class="list">
+          <button class="tab-btn" data-wb="deepPartial">DeepPartial</button>
+          <button class="tab-btn" data-wb="jsonValue">JSONValue</button>
+          <button class="tab-btn" data-wb="tupleToUnion">TupleToUnion</button>
+          <button class="tab-btn" data-wb="unionToIntersection">UnionToIntersection</button>
+          <button class="tab-btn" data-wb="brand">Branded Types</button>
+          <button class="tab-btn" data-wb="prefixKeys">Key Remapping</button>
+          <button class="tab-btn" data-wb="discriminated">Discriminated Union + Exhaustive</button>
+        </div>
+      </div>
+
+      <div class="split">
+        <div class="card">
+          <div class="row" style="justify-content:space-between; align-items:center">
+            <h3 id="wbTitle">DeepPartial</h3>
+            <div class="row">
+              <button id="showHint" class="warn">Xem gợi ý</button>
+              <button id="showAnswer" class="good">Xem đáp án mẫu</button>
+              <button id="resetWB">Reset</button>
+            </div>
+          </div>
+          <pre class="code" id="wbPrompt"></pre>
+          <textarea id="wbEditor"></textarea>
+        </div>
+        <div class="card">
+          <h3>Preview Type-Check (giả lập)</h3>
+          <p class="muted small">Không biên dịch TS thực, nhưng hiển thị mẫu sử dụng/expectation để tự kiểm tra.</p>
+          <pre class="code" id="wbPreview"></pre>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- LIVE CODE -->
+  <section id="live" class="panel">
+    <div class="card">
+      <h3>Bài Live-code có Test Cases</h3>
+      <p class="muted">Chọn đề, viết hàm JS/TS trong ô bên dưới, chạy test để kiểm tra. Các test chạy trong trình duyệt, không cần server.</p>
+      <div class="list">
+        <button class="tab-btn" data-kata="memoize">memoizeWithTTL</button>
+        <button class="tab-btn" data-kata="deepEqual">deepEqual (structural)</button>
+        <button class="tab-btn" data-kata="parseQuery">parseQueryString</button>
+        <button class="tab-btn" data-kata="scheduler">promisePool (concurrency)</button>
+        <button class="tab-btn" data-kata="retry">retryWithBackoff</button>
+      </div>
+    </div>
+
+    <div class="grid">
+      <div class="card">
+        <h4 id="kataTitle">memoizeWithTTL</h4>
+        <pre class="code" id="kataPrompt"></pre>
+        <textarea id="codeEditor">// Viết code của bạn tại đây
+function memoizeWithTTL(fn, ttlMs = 1000) {
+  const cache = new Map();
+  return (...args) => {
+    const key = JSON.stringify(args);
+    const rec = cache.get(key);
+    const now = Date.now();
+    if (rec && (now - rec.t) < ttlMs) return rec.v;
+    const v = fn(...args);
+    cache.set(key, { v, t: now });
+    return v;
+  };
+}
+        </textarea>
+        <div class="actions">
+          <button id="runTests" class="good">Chạy tests</button>
+          <button id="resetCode">Reset code</button>
+        </div>
+      </div>
+      <div class="card">
+        <h4>Kết quả Test</h4>
+        <div class="tests">
+          <div id="testResult" class="test-result">Chưa chạy test.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TIPS -->
+  <section id="tips" class="panel">
+    <div class="grid">
+      <div class="card">
+        <h3>Checklist ôn tập nhanh</h3>
+        <ul>
+          <li>Phân biệt interface vs type alias; union, intersection, mapped, conditional, template literal types.</li>
+          <li>unknown vs any vs never; type narrowing; user-defined type guards.</li>
+          <li>Distributive conditional types; key remapping; satisfies; const assertions.</li>
+          <li>Generics nâng cao: constraints, default, inference from usage, keyof/Indexed Access.</li>
+          <li>ESM vs CJS; esModuleInterop, allowSyntheticDefaultImports; declaration emit.</li>
+          <li>strictNullChecks, noUncheckedIndexedAccess, exactOptionalPropertyTypes, useUnknownInCatchVariables.</li>
+          <li>React + TS: discriminated props, typing hooks, JSX.LibraryManagedAttributes.</li>
+          <li>Performance: tránh huge unions/recursive types quá sâu; tối ưu tsconfig và modularize types.</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>Giải thích chi tiết</h3>
+
+        <details class="tips-item">
+          <summary>1) Interface vs type; union/intersection/mapped/conditional/template literal</summary>
+          <ul>
+            <li>Interface: mô tả object/class, hỗ trợ declaration merging, public API dễ mở rộng.</li>
+            <li>Type alias: cho union/tuple/conditional/mapped nâng cao, template literal, branded types.</li>
+            <li>Union A|B cần narrowing; Intersection A&B kết hợp thuộc tính.</li>
+            <li>Mapped: { [K in keyof T]+?: Readonly<T[K]> } và key remap bằng "as".</li>
+            <li>Conditional: T extends U ? X : Y; distributive khi T là union và đứng trần. Tránh bằng [T] extends U ? ...</li>
+            <li>Template literal types: `${'user'|'system'}:${'create'|'update'}` để sinh chuỗi hợp lệ.</li>
+          </ul>
+        </details>
+
+        <details class="tips-item">
+          <summary>2) unknown vs any vs never; narrowing; type guards</summary>
+          <ul>
+            <li>any: tắt kiểm tra type — hạn chế dùng.</li>
+            <li>unknown: an toàn hơn, phải refine bằng typeof/in/instanceof/guard.</li>
+            <li>never: không có giá trị; dùng cho exhaustive check.</li>
+            <li>Guard: function isFoo(x: unknown): x is Foo { ... }.</li>
+          </ul>
+        </details>
+
+        <details class="tips-item">
+          <summary>3) Distributive conditional; key remapping; satisfies; as const</summary>
+          <ul>
+            <li>Phân phối trên union: (A|B) extends U ? X:Y → (A extends U ? X:Y) | (B extends U ? X:Y).</li>
+            <li>Key remap: { [K in keyof T as `${'pre'}${Extract<K,string>}`]: T[K] } — gán never để bỏ key.</li>
+            <li>satisfies: vừa check tương thích, vừa giữ literal narrows.</li>
+            <li>as const: literalize + readonly sâu — hữu ích cho tuples/unions.</li>
+          </ul>
+        </details>
+
+        <details class="tips-item">
+          <summary>4) Generics: constraints, default, inference, keyof/Indexed Access</summary>
+          <ul>
+            <li>Constraints: &lt;T extends Record&lt;string, unknown&gt;&gt; ...</li>
+            <li>Default params: &lt;T = unknown, U extends string = 'id'&gt; ...</li>
+            <li>Inference: TS suy luận từ args; dùng overload/helper khi cần hướng.</li>
+            <li>keyof, T[K]: chọn khóa và type của thuộc tính tương ứng an toàn.</li>
+          </ul>
+        </details>
+
+        <details class="tips-item">
+          <summary>5) ESM vs CJS; esModuleInterop; allowSyntheticDefaultImports; .d.ts</summary>
+          <ul>
+            <li>ESM/CJS ảnh hưởng import/export, bundling, interop.</li>
+            <li>esModuleInterop: default import từ CJS ở runtime.</li>
+            <li>allowSyntheticDefaultImports: chỉ type-level; thường bật cùng esModuleInterop.</li>
+            <li>Emit .d.ts: declaration, emitDeclarationOnly, outDir; chú ý export type vs value.</li>
+          </ul>
+        </details>
+
+        <details class="tips-item">
+          <summary>6) strict flags quan trọng</summary>
+          <ul>
+            <li>strictNullChecks: buộc xử lý null/undefined.</li>
+            <li>noUncheckedIndexedAccess: obj[key] → T | undefined.</li>
+            <li>exactOptionalPropertyTypes: phân biệt thiếu prop vs prop=undefined.</li>
+            <li>useUnknownInCatchVariables: catch (e: unknown) và refine instanceof Error.</li>
+          </ul>
+        </details>
+
+        <details class="tips-item">
+          <summary>7) React + TS</summary>
+          <ul>
+            <li>Discriminated props thay cho optional mơ hồ.</li>
+            <li>useRef&lt;HTMLDivElement | null&gt;(null), useReducer với action unions + exhaustive switch.</li>
+            <li>JSX.LibraryManagedAttributes ảnh hưởng inference khi có defaultProps/propTypes.</li>
+            <li>Tránh React.FC nếu không muốn mặc định có children.</li>
+          </ul>
+        </details>
+
+        <details class="tips-item">
+          <summary>8) Performance & DX</summary>
+          <ul>
+            <li>Tránh huge unions và conditional đệ quy sâu.</li>
+            <li>Modularize types, tái dùng utility; cân nhắc skipLibCheck cho app.</li>
+            <li>Dùng satisfies và as const để giảm noise mà vẫn an toàn.</li>
+          </ul>
+        </details>
+
+        <details class="tips-item">
+          <summary>9) Utility patterns</summary>
+          <ul>
+            <li>Built-ins: Partial/Required/Readonly/Record/Pick/Omit/NonNullable/ReturnType/Parameters/Awaited…</li>
+            <li>DeepPartial/DeepReadonly: mapped + conditional + đệ quy.</li>
+            <li>Branded primitives: Brand&lt;string,'UserId'&gt; để phân biệt ID.</li>
+            <li>Result/Either thay throw để kiểm soát luồng lỗi.</li>
+          </ul>
+        </details>
+
+        <details class="tips-item">
+          <summary>10) Async & Concurrency</summary>
+          <ul>
+            <li>Awaited&lt;T&gt; lấy inner type của Promise/Thenable.</li>
+            <li>Promise.all giữ tuple inference khi truyền tuple hằng.</li>
+            <li>Patterns: promise pool, retry with backoff, memoize async cache Promise.</li>
+            <li>AbortController: API nhận signal?: AbortSignal.</li>
+          </ul>
+        </details>
+
+        <details class="tips-item">
+          <summary>11) Interop JS: JSDoc, overloads, this parameters</summary>
+          <ul>
+            <li>// @ts-check trong .js + JSDoc cho gradual typing.</li>
+            <li>Overloads cho wrapper thư viện JS để DX tốt.</li>
+            <li>this parameters: function f(this: Ctx, ...).</li>
+          </ul>
+        </details>
+
+        <details class="tips-item">
+          <summary>12) Decorators TS 5.x vs legacy</summary>
+          <ul>
+            <li>TS 5.x bám TC39 (stage 3), semantics khác legacy experimentalDecorators.</li>
+            <li>Migrate cần xem xét emit/metadatas khác biệt.</li>
+          </ul>
+        </details>
+
+        <details class="tips-item">
+          <summary>13) Compiler API & ts-morph</summary>
+          <ul>
+            <li>Dùng cho codegen, codemod, custom lint.</li>
+            <li>Program, TypeChecker, SourceFile, Node, Symbol, Type là khái niệm chính.</li>
+            <li>ts-morph đơn giản hoá thao tác AST/FS.</li>
+          </ul>
+        </details>
+
+        <details class="tips-item">
+          <summary>14) Tình huống thực tế</summary>
+          <ul>
+            <li>API client type-safe: codegen từ OpenAPI/GraphQL hoặc validate runtime bằng Zod + zod.infer.</li>
+            <li>DB ↔ TS sync: Prisma/drizzle-orm + schema là nguồn sự thật.</li>
+            <li>Migrate từ any-heavy: bật strict dần, thay any bằng unknown, guard, test, theo dõi thời gian build.</li>
+          </ul>
+        </details>
+
+        <p class="muted small">Mẹo: chuẩn bị ví dụ thật nơi TS đã bắt bug sớm hoặc giúp bạn thiết kế API an toàn; đây là điểm cộng lớn.</p>
+      </div>
+
+      <div class="card">
+        <h3>Tài liệu tham khảo</h3>
+        <ul>
+          <li>TypeScript Handbook + Reference (5.x)</li>
+          <li>TSConfig Reference — module, target, moduleResolution</li>
+          <li>Effective TypeScript (Dan Vanderkam)</li>
+          <li>type-fest, ts-toolbelt để học pattern nâng cao</li>
+          <li>Zod + zod.infer cho validation runtime ↔ types đồng bộ</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    © 2025 — TypeScript Interview Trainer. Bạn có thể lưu trang này và dùng offline.
+  </footer>
+</main>
+
+<script>
+/* ------- Utilities ------- */
+function el(tag, attrs={}, ...children){
+  const n = document.createElement(tag);
+  for(const [k,v] of Object.entries(attrs)){
+    if(k === 'class') n.className = v;
+    else if(k.startsWith('on') && typeof v === 'function') n.addEventListener(k.slice(2), v);
+    else if(k === 'html') n.innerHTML = v;
+    else n.setAttribute(k, v);
+  }
+  for(const c of children){
+    if(c == null) continue;
+    if(typeof c === 'string') n.appendChild(document.createTextNode(c));
+    else n.appendChild(c);
+  }
+  return n;
+}
+function shuffleArray(arr){
+  const a = arr.slice();
+  for(let i=a.length-1;i>0;i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+/* ------- Quiz Data ------- */
+const QUIZ_BANK = {
+  mix: [
+    { q: "Khi nào nên dùng interface thay vì type alias?",
+      options: ["Khi cần union types và tuples","Khi muốn declaration merging/mở rộng hình dạng object","Khi cần template literal types","Khi muốn tạo branded primitive"],
+      answer: 1,
+      exp: "Interface cho object/class shape và hỗ trợ declaration merging/mở rộng; type alias phù hợp union/tuple/conditional." },
+    { q: "unknown khác any như thế nào?",
+      options: ["unknown rộng hơn any","unknown cho phép mọi thao tác","unknown buộc phải refine trước khi dùng","Chúng giống nhau"],
+      answer: 2,
+      exp: "unknown an toàn hơn: phải thu hẹp (type guard) trước khi truy cập; any bỏ qua kiểm tra type." },
+    { q: "never biểu thị điều gì?",
+      options: ["Một type không có giá trị khả dĩ","Một alias cho null","Một type của mọi object","Một promise bị reject"],
+      answer: 0,
+      exp: "never là type không thể có giá trị; xuất hiện ở hàm throw/loop vô hạn và dùng cho exhaustive checking." },
+    { q: "Điều gì làm conditional types trở nên 'distributive'?",
+      options: ["Khi dùng với mapped types","Khi T là union và xuất hiện trần (bare) ở vị trí left của extends","Khi bật --strict","Khi dùng keyof"],
+      answer: 1,
+      exp: "T extends U ? X : Y sẽ phân phối trên union của T; để tránh, bao T trong [T]." },
+    { q: "Bivariant parameter cho callbacks có ý nghĩa gì?",
+      options: ["Tham số hàm vừa co- vừa phản-biến để tiện dụng, nhưng kém an toàn hơn","Chỉ có ở --strictFunctionTypes","Tăng độ an toàn type","Chỉ áp dụng cho arrow functions"],
+      answer: 0,
+      exp: "TS nới lỏng variance ở callbacks trong interface, dẫn tới bivariant; tiện DX nhưng có thể chấp nhận type không an toàn." },
+    { q: "const assertion (as const) làm gì?",
+      options: ["Tự động thêm readonly và literalize giá trị","Chuyển mọi số thành bigint","Tắt type checking","Chuyển function thành const"],
+      answer: 0,
+      exp: "as const biến literal thành literal types và readonly, giúp narrow type." },
+    { q: "exactOptionalPropertyTypes làm gì?",
+      options: ["Bắt buộc optional không thể gán undefined","Phân biệt 'chưa có prop' và 'prop=undefined'","Xoá undefined khỏi optional","Không có trong TS"],
+      answer: 1,
+      exp: "Flag này phân biệt thiếu thuộc tính và giá trị là undefined một cách nghiêm ngặt." },
+    { q: "esModuleInterop dùng để?",
+      options: ["Tối ưu tree-shaking","Cho phép default import từ CommonJS tiện hơn","Bật strict mode","Tạo declaration files"],
+      answer: 1,
+      exp: "Giúp import default từ CJS như import x from 'pkg'; tạo các helper interop." },
+    { q: "Key remapping trong mapped types dùng cú pháp nào?",
+      options: ["{ [K in keyof T]: ... }","{ [K in keyof T as NewKey<K>]: ... }","{ K in T }","{ as K in keyof T }"],
+      answer: 1,
+      exp: "Dùng 'as' để đổi tên key: [K in keyof T as ...]." },
+    { q: "Template literal types hữu ích nhất cho?",
+      options: ["Tạo số ngẫu nhiên","Tạo chuỗi pattern-safe compile-time như 'on_click', 'user:create'","Tối ưu runtime perf","Chỉ dùng trong React"],
+      answer: 1,
+      exp: "Kết hợp unions để tạo tập chuỗi hợp lệ ngay tại compile-time." },
+    { q: "Discriminated union cần gì để narrow tốt?",
+      options: ["Thuộc tính tag chung literal (vd kind: 'a'|'b')","implements interface","extends class","index signature"],
+      answer: 0,
+      exp: "Một thuộc tính phân biệt literal giúp switch/case narrow chính xác." },
+    { q: "NonNullable<T> làm gì?",
+      options: ["Xoá mọi optional","Loại bỏ null và undefined khỏi T","Chỉ giữ null và undefined","Biến T thành never"],
+      answer: 1,
+      exp: "Loại bỏ null | undefined khỏi type." },
+    { q: "Awaited<T> dùng để?",
+      options: ["Bọc Promise","Lấy inner type của Promise/Thenable","Tạo delay","Không tồn tại trong TS"],
+      answer: 1,
+      exp: "Awaited lấy ra type bên trong Promise, xử lý nested và Thenable." },
+    { q: "noUncheckedIndexedAccess ảnh hưởng gì?",
+      options: ["Indexing mảng/record trả về T | undefined","Cấm dùng [] indexing","Tăng tốc build","Bật JSX"],
+      answer: 0,
+      exp: "Bắt bạn xử lý khả năng undefined khi truy cập theo chỉ số/khóa." },
+    { q: "allowSyntheticDefaultImports khác gì esModuleInterop?",
+      options: ["Tương đương hoàn toàn","Chỉ ảnh hưởng type level, không emit helper runtime như esModuleInterop","Chỉ dùng cho node:module","Liên quan decorators"],
+      answer: 1,
+      exp: "allowSyntheticDefaultImports là type-level; esModuleInterop ảnh hưởng emit runtime." },
+    { q: "Trong React, nên tránh gì với React.FC?",
+      options: ["Tự động thêm children khiến API props kém rõ ràng","Không thể dùng generics","Không hỗ trợ defaultProps","Không thể dùng memo"],
+      answer: 0,
+      exp: "React.FC thêm children mặc định; nên khai báo props rõ ràng để kiểm soát." },
+    { q: "Cách viết user-defined type guard đúng?",
+      options: ["function isX(v: unknown): boolean","function isX(v: any): v is X","function isX(v: unknown): v is X","function isX<T>(v: T): v is T"],
+      answer: 2,
+      exp: "Sử dụng predicate 'v is X' và nhận unknown để ép refine." },
+    { q: "UnionToIntersection kiểu kinh điển dùng gì?",
+      options: ["infer trong conditional + function params","keyof T","Mapped types","Enum"],
+      answer: 0,
+      exp: "Dùng (T extends any ? (k: T)=>void : never) extends (k: infer I)=>void ? I : never." },
+    { q: "Sự khác nhau giữa ESM và CJS quan trọng vì?",
+      options: ["Ảnh hưởng đến cách import/export và bundling, default interop","Chỉ khác tên file .mjs","Chủ yếu ảnh hưởng CSS","Không ảnh hưởng TS"],
+      answer: 0,
+      exp: "Quyết định moduleResolution, emit, interop default import, và cách bundle." },
+    { q: "Tại sao nên dùng 'satisfies'?",
+      options: ["Để widen type","Để kiểm tra object khớp target type mà vẫn giữ literal narrows","Để ép kiểu như as any","Không có trong TS"],
+      answer: 1,
+      exp: "satisfies xác nhận tính tương thích mà không làm mất literal types của giá trị." },
+  ],
+  types: [
+    { q: "Mapped types modifier '+readonly' và '-readonly' dùng để?",
+      options: ["Thêm/Xoá readonly trên từng property","Tạo optional properties","Đổi tên key","Bắt buộc non-null"],
+      answer: 0,
+      exp: "Có thể thêm hoặc gỡ readonly trong mapped types." },
+    { q: "Khi nào conditional types không distributive?",
+      options: ["Khi bọc T trong [T]","Khi dùng keyof","Khi trong generic constraints","Khi dùng never"],
+      answer: 0,
+      exp: "Bọc T: [T] extends U ? X : Y sẽ không phân phối trên union." },
+    { q: "Template literal types kết hợp infer để làm gì?",
+      options: ["Parse chuỗi ở type level","Chỉ concatenate","Tối ưu runtime","Không thể kết hợp"],
+      answer: 0,
+      exp: "Có thể 'cắt' chuỗi bằng infer trong conditional để tạo parser type-level." },
+    { q: "Indexed Access Type T[K] là gì?",
+      options: ["Truy cập property type theo key K","Truy cập runtime","Ép kiểu","Kiểu function"],
+      answer: 0,
+      exp: "Giúp lấy type của thuộc tính theo khóa." },
+    { q: "Lợi ích của brand types?",
+      options: ["Tạo nominal-like distinctions cho primitives","Tăng tốc độ","Hỗ trợ decorators","Cải thiện JSX"],
+      answer: 0,
+      exp: "Phân biệt UserId/PostId cùng là string." },
+    { q: "never trong union có tác dụng?",
+      options: ["Làm union rỗng","Bị loại bỏ, không ảnh hưởng","Làm union thành any","Bắt buộc null"],
+      answer: 1,
+      exp: "T | never ≡ T." },
+    { q: "Sử dụng 'in' operator để narrow khi nào?",
+      options: ["Khi kiểm tra thuộc tính tồn tại trong object","Chỉ với class","Chỉ với number","Không thể dùng để narrow"],
+      answer: 0,
+      exp: "'prop' in obj là type guard hữu ích." },
+    { q: "Key remapping có thể loại bỏ keys bằng cách?",
+      options: ["Gán never cho tên key","Gán null","Gán undefined","Không thể"],
+      answer: 0,
+      exp: "as never sẽ loại bỏ key khỏi mapped type." },
+    { q: "Sự khác biệt giữa extends và super trong TS type system?",
+      options: ["extends dùng cho ràng buộc generic/conditional; super không tồn tại ở type level","super dùng trong interface","Chúng giống nhau","super dùng để widen"],
+      answer: 0,
+      exp: "super là từ khóa runtime; type system dùng extends." },
+    { q: "Exhaustive checking kỹ thuật thường dùng?",
+      options: ["Gán biến kiểu never ở default case","Dùng any","Dùng optional chaining","Dùng instanceof"],
+      answer: 0,
+      exp: "const _exhaustive: never = value; để fail compile khi thiếu nhánh." },
+  ],
+  react: [
+    { q: "Typing useRef cho DOM node đúng?",
+      options: ["useRef<HTMLDivElement>(null)","useRef<HTMLDivElement | null>(null)","useRef(null)","useRef<any>(null)"],
+      answer: 1,
+      exp: "Ban đầu ref null nên cần union với null." },
+    { q: "Discriminated props hữu ích vì?",
+      options: ["Tránh props mâu thuẫn/không rõ ràng bằng union có tag","Tăng performance render","Giảm kích thước bundle","Bắt buộc dùng React.FC"],
+      answer: 0,
+      exp: "Giúp đảm bảo invariants ở compile-time." },
+    { q: "JSX.LibraryManagedAttributes ảnh hưởng gì?",
+      options: ["Cách TS suy luận props khi có defaultProps/propTypes","Cách React hydrate","Cách Babel transpile","Không liên quan"],
+      answer: 0,
+      exp: "Ảnh hưởng inference props từ component." },
+    { q: "Typing useReducer actions tốt nhất:",
+      options: ["Dùng union cho action.type và payload tùy biến","Dùng any cho payload","Dùng enum bất kỳ","Dùng string"],
+      answer: 0,
+      exp: "Union giúp exhaustive switch trong reducer." },
+    { q: "Tránh gì với children khi không hỗ trợ?",
+      options: ["React.FC","Explicit props type không có children","Memo","ForwardRef"],
+      answer: 0,
+      exp: "React.FC tự thêm children không mong muốn." },
+  ],
+  build: [
+    { q: "Khác biệt target vs module trong tsconfig?",
+      options: ["target quyết định version JS output; module quyết định hệ module","Cả hai giống nhau","target chỉ cho DOM","module chỉ cho Node types"],
+      answer: 0,
+      exp: "target: ES2019/ES2020...; module: ESM/CJS/NodeNext..." },
+    { q: "NodeNext moduleResolution sử dụng khi:",
+      options: ["Muốn tương thích ESM/CJS theo Node 16+","Chạy trên Deno","Chỉ browser","Decorator"],
+      answer: 0,
+      exp: "Hợp lệ cho dự án Node hiện đại." },
+    { q: "emitDeclarationOnly có tác dụng?",
+      options: ["Chỉ phát sinh .d.ts không phát sinh .js","Tắt type checking","Chỉ phát sinh .js","Bật source map"],
+      answer: 0,
+      exp: "Hữu ích khi xây lib và bundler xử lý JS." },
+    { q: "paths/baseUrl cần đồng bộ với?",
+      options: ["Bundler/tsconfig references","ESLint","Prettier","Jest chỉ"],
+      answer: 0,
+      exp: "Bundler cần biết alias giống tsconfig." },
+    { q: "default import từ CJS mà không esModuleInterop sẽ?",
+      options: ["Luôn chạy được","Thường lỗi hoặc phải import * as x","Không ảnh hưởng","Tự động shim"],
+      answer: 1,
+      exp: "Cần esModuleInterop hoặc import * as." },
+  ],
+};
+
+/* ------- Quiz Rendering ------- */
+const quizContainer = document.getElementById('quizContainer');
+let currentSetKey = 'mix';
+let currentQuestions = [];
+let score = 0;
+
+function renderQuiz() {
+  quizContainer.innerHTML = '';
+  score = 0;
+  document.getElementById('score').textContent = score.toString();
+
+  currentQuestions.forEach((item, idx) => {
+    const qEl = el('div', {class:'question'});
+    const title = el('h4', {}, `${idx+1}. ${item.q}`);
+    const opts = el('div', {class:'options'});
+    const explain = el('div', {class:'explain'}, item.exp);
+
+    item._chosen = null;
+
+    item.options.forEach((opt, i) => {
+      const btn = el('div', {class:'option', onclick: () => choose(idx, i)},
+        el('input', {type:'radio', name:`q_${idx}`, style:'margin-top:3px'}),
+        el('div', {}, opt)
+      );
+      opts.appendChild(btn);
+    });
+
+    qEl.appendChild(title);
+    qEl.appendChild(opts);
+    qEl.appendChild(explain);
+    quizContainer.appendChild(qEl);
+  });
+}
+
+function choose(qIndex, optIndex){
+  const item = currentQuestions[qIndex];
+  if(item._finalized) return;
+  item._chosen = optIndex;
+
+  const qEl = quizContainer.children[qIndex];
+  const opts = qEl.querySelectorAll('.option');
+  opts.forEach((node, i) => {
+    node.classList.remove('correct', 'incorrect');
+    node.querySelector('input').checked = i === optIndex;
+  });
+}
+
+function checkOne(qIndex){
+  const item = currentQuestions[qIndex];
+  if(item._finalized) return;
+  const qEl = quizContainer.children[qIndex];
+  const opts = qEl.querySelectorAll('.option');
+  const explain = qEl.querySelector('.explain');
+
+  opts.forEach((node, i) => {
+    if(i === item.answer) node.classList.add('correct');
+    if(item._chosen != null && i === item._chosen && i !== item.answer) node.classList.add('incorrect');
+  });
+
+  if (item._chosen === item.answer) score++;
+  item._finalized = true;
+
+  document.getElementById('score').textContent = score.toString();
+  explain.classList.add('show');
+}
+
+function checkAll(){
+  score = 0;
+  currentQuestions.forEach(item => { item._finalized = false; });
+  for(let i=0;i<currentQuestions.length;i++) checkOne(i);
+}
+
+function revealAll(){
+  for(let i=0;i<currentQuestions.length;i++){
+    const qEl = quizContainer.children[i];
+    qEl.querySelector('.explain').classList.add('show');
+    const item = currentQuestions[i];
+    const opts = qEl.querySelectorAll('.option');
+    opts.forEach((node, j) => node.classList.toggle('correct', j === item.answer));
+  }
+}
+
+/* ------- Quiz Controls ------- */
+document.getElementById('quizSet').addEventListener('change', (e)=>{
+  currentSetKey = e.target.value;
+});
+document.getElementById('startQuiz').addEventListener('click', ()=>{
+  const base = QUIZ_BANK[currentSetKey];
+  const pool = currentSetKey === 'mix' ? shuffleArray(base).slice(0, 20) : shuffleArray(base).slice(0, 10);
+  currentQuestions = pool.map(x => ({...x}));
+  renderQuiz();
+});
+document.getElementById('shuffle').addEventListener('click', ()=>{
+  currentQuestions = shuffleArray(currentQuestions);
+  renderQuiz();
+});
+document.getElementById('checkAll').addEventListener('click', checkAll);
+document.getElementById('revealAll').addEventListener('click', revealAll);
+
+// Initialize quiz
+currentQuestions = shuffleArray(QUIZ_BANK.mix).slice(0, 20).map(x=>({...x}));
+renderQuiz();
+
+/* ------- Tabs ------- */
+const tabButtons = document.querySelectorAll('.tab-btn[data-tab]');
+const panels = document.querySelectorAll('section.panel');
+tabButtons.forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    const id = btn.getAttribute('data-tab');
+    document.querySelectorAll('.tab-btn[data-tab]').forEach(b => b.classList.toggle('active', b === btn));
+    panels.forEach(p => p.classList.toggle('active', p.id === id));
+  });
+});
+
+/* ------- Whiteboard Bank ------- */
+const WB = {
+  deepPartial: {
+    title: "DeepPartial",
+    prompt:
+`Viết DeepPartial<T> biến mọi thuộc tính (kể cả lồng) thành optional.
+
+Yêu cầu:
+- Với object: mọi key thành optional và áp dụng đệ quy.
+- Với Array/Tuple: phần tử trở thành DeepPartial phần tử.
+- Với function/primitive: giữ nguyên.
+
+Ví dụ:
+type A = { x: { y: number[] }; f: (s: string) => void };
+type R = DeepPartial<A>;
+/*
+R ~ {
+  x?: { y?: number[] | undefined } | undefined;
+  f?: ((s: string) => void) | undefined;
+}
+*/
+`,
+    hint:
+`Gợi ý:
+- Dùng conditional + infer để nhận dạng array/readonly array.
+- Với mảng: DeepPartial<T[number]>.
+- Với object: mapped type với +? và đệ quy.`,
+    answer:
+`type DeepPartial<T> =
+  T extends Function ? T
+  : T extends readonly (infer U)[] ? readonly DeepPartial<U>[]
+  : T extends (infer U)[] ? DeepPartial<U>[]
+  : T extends object ? { readonly [K in keyof T]+?: DeepPartial<T[K]> }
+  : T;`,
+    preview:
+`// Sử dụng:
+type A = { x: { y: number[] }; f: (s: string) => void };
+type R = DeepPartial<A>;
+/* kiểm tra ý tưởng (mô tả):
+- R.x?: { y?: number[] }
+- R.f?: (s: string) => void
+*/`
+  },
+  jsonValue: {
+    title: "JSONValue",
+    prompt:
+`Định nghĩa JSONValue đại diện cấu trúc JSON hợp lệ.
+
+- JSON primitives: string | number | boolean | null
+- Array: JSONValue[]
+- Object: { [k: string]: JSONValue } (không có Symbol/Function/undefined)
+
+Viết:
+type JSONValue = ...`,
+    hint:
+`Gợi ý: Đệ quy qua array và record string-key.`,
+    answer:
+`type JSONPrimitive = string | number | boolean | null;
+type JSONValue = JSONPrimitive | JSONValue[] | { [k: string]: JSONValue };`,
+    preview:
+`declare const v: JSONValue;
+// v có thể là object/array lồng ghép primitives, không function/undefined.`
+  },
+  tupleToUnion: {
+    title: "TupleToUnion",
+    prompt:
+`Chuyển tuple thành union type.
+
+Ví dụ:
+type T = ['a', 1, true];
+type U = TupleToUnion<T>; // 'a' | 1 | true`,
+    hint: `Gợi ý: Dùng T[number] để lấy union của các phần tử.`,
+    answer: `type TupleToUnion<T extends readonly unknown[]> = T[number];`,
+    preview:
+`type U = TupleToUnion<['a', 1, true]>; // 'a' | 1 | true`
+  },
+  unionToIntersection: {
+    title: "UnionToIntersection",
+    prompt:
+`Viết UnionToIntersection<U>.
+
+Gợi ý: Thủ thuật function params + infer.`,
+    hint:
+`(U extends any ? (x: U) => void : never) extends (x: infer I) => void ? I : never`,
+    answer:
+`type UnionToIntersection<U> =
+  (U extends any ? (x: U) => void : never) extends (x: infer I) => void ? I : never;`,
+    preview:
+`type I = UnionToIntersection<{a:1} | {b:2}>; // {a:1} & {b:2}`
+  },
+  brand: {
+    title: "Branded Types",
+    prompt:
+`Tạo brand cho ID để phân biệt UserId và PostId (đều là string).
+
+Viết:
+type Brand<T, B extends string> = ...
+type UserId = Brand<string, 'UserId'>;`,
+    hint: `Dùng intersection với field ẩn __brand.`,
+    answer:
+`type Brand<T, B extends string> = T & { readonly __brand: B };
+type UserId = Brand<string, 'UserId'>;
+type PostId = Brand<string, 'PostId'>;`,
+    preview:
+`declare const u: UserId; declare const p: PostId;
+// u không gán cho p được và ngược lại.`
+  },
+  prefixKeys: {
+    title: "Key Remapping",
+    prompt:
+`Thêm tiền tố P cho mọi key string của T.
+
+type PrefixKeys<T, P extends string> = ...`,
+    hint: `Dùng [K in keyof T as ...]: T[K] và Extract<K, string>.`,
+    answer:
+`type PrefixKeys<T, P extends string> = {
+  [K in keyof T as \`\${P}\${Extract<K, string>}\`]: T[K]
+};`,
+    preview:
+`type R = PrefixKeys<{id:number; name:string}, 'user_'>; // user_id, user_name`
+  },
+  discriminated: {
+    title: "Discriminated Union + Exhaustive",
+    prompt:
+`Định nghĩa Shape và hàm area với exhaustive check.
+
+type Shape = ...; function area(s: Shape): number { ... }`,
+    hint: `Dùng kind: 'circle' | 'rect'; default: const _x: never = s;`,
+    answer:
+`type Shape =
+  | { kind: 'circle'; r: number }
+  | { kind: 'rect'; w: number; h: number };
+
+function area(s: Shape): number {
+  switch (s.kind) {
+    case 'circle': return Math.PI * s.r * s.r;
+    case 'rect': return s.w * s.h;
+    default: {
+      const _exhaustive: never = s;
+      return _exhaustive;
+    }
+  }
+}`,
+    preview:
+`area({ kind:'circle', r:2 }); // 12.56...
+area({ kind:'rect', w:2, h:3 }); // 6`
+  }
+};
+const wbTitle = document.getElementById('wbTitle');
+const wbPrompt = document.getElementById('wbPrompt');
+const wbPreview = document.getElementById('wbPreview');
+const wbEditor = document.getElementById('wbEditor');
+let currentWB = 'deepPartial';
+
+function loadWB(key){
+  const d = WB[key];
+  currentWB = key;
+  wbTitle.textContent = d.title;
+  wbPrompt.textContent = d.prompt;
+  wbPreview.textContent = d.preview;
+  wbEditor.value = '';
+}
+
+document.querySelectorAll('[data-wb]').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('[data-wb]').forEach(b=>b.classList.toggle('active', b===btn));
+    loadWB(btn.getAttribute('data-wb'));
+  });
+});
+document.getElementById('showHint').addEventListener('click', ()=>{
+  wbEditor.value += (wbEditor.value ? "\n\n" : "") + (WB[currentWB].hint || "// Không có gợi ý.");
+});
+document.getElementById('showAnswer').addEventListener('click', ()=>{
+  wbEditor.value = WB[currentWB].answer || "// Chưa có đáp án.";
+});
+document.getElementById('resetWB').addEventListener('click', ()=>{
+  wbEditor.value = '';
+});
+loadWB(currentWB);
+
+/* ------- Live Code Katas ------- */
+const KATAS = {
+  memoize: {
+    title: "memoizeWithTTL",
+    prompt:
+`Viết memoizeWithTTL(fn, ttlMs) trả về hàm được cache theo tham số trong ttlMs.
+- Cache theo serialize args (có thể dùng JSON.stringify).
+- Hết TTL thì tính lại.
+- Hỗ trợ cả result sync và Promise (giữ nguyên Promise).
+
+Ví dụ:
+const add = (a,b)=>a+b;
+const mAdd = memoizeWithTTL(add, 50);
+mAdd(1,2) // 3; gọi lại trong 50ms => lấy cache.`,
+    template:
+`function memoizeWithTTL(fn, ttlMs = 1000) {
+  const cache = new Map();
+  return (...args) => {
+    const key = JSON.stringify(args);
+    const rec = cache.get(key);
+    const now = Date.now();
+    if (rec && (now - rec.t) < ttlMs) return rec.v;
+    const v = fn(...args);
+    cache.set(key, { v, t: now });
+    return v;
+  };
+}`,
+    tests: async (userFn, log) => {
+      const sleep = ms => new Promise(r=>setTimeout(r, ms));
+      let calls = 0;
+      const add = (a,b)=>{ calls++; return a+b; };
+      const m1 = userFn(add, 60);
+      const a1 = m1(1,2);
+      const a2 = m1(1,2);
+      log("cache sync", a1===3 && a2===3 && calls===1);
+
+      await sleep(65);
+      const a3 = m1(1,2);
+      log("expire", a3===3 && calls===2);
+
+      // Promise
+      let asyncCalls = 0;
+      const fetchX = async (x)=>{ asyncCalls++; await sleep(10); return x*2; };
+      const m2 = userFn(fetchX, 100);
+      const v1 = await m2(5);
+      const v2 = await m2(5);
+      log("cache async", v1===10 && v2===10 && asyncCalls===1);
+    }
+  },
+  deepEqual: {
+    title: "deepEqual",
+    prompt:
+`Viết deepEqual(a,b) so sánh sâu:
+- So sánh primitives (NaN ~ NaN), Date theo getTime, Array/Object theo cấu trúc, Map/Set theo nội dung.
+- Bỏ qua thứ tự key (object), nhưng Set/Map cần xem phần tử tương đương.
+- Không cần hỗ trợ prototype custom phức tạp.`,
+    template:
+`function deepEqual(a,b, seen=new WeakMap()){
+  if (Object.is(a,b)) return true;
+  if (typeof a !== typeof b) return false;
+  if (a == null || b == null) return a === b;
+  if (typeof a !== 'object') return a === b;
+
+  // cycle handling
+  const s = seen.get(a);
+  if (s && s === b) return true;
+  seen.set(a,b);
+
+  if (a instanceof Date && b instanceof Date) return a.getTime() === b.getTime();
+  if (Array.isArray(a) && Array.isArray(b)){
+    if (a.length !== b.length) return false;
+    for(let i=0;i<a.length;i++){ if(!deepEqual(a[i], b[i], seen)) return false; }
+    return true;
+  }
+  if (a instanceof Set && b instanceof Set){
+    if (a.size !== b.size) return false;
+    for(const x of a){
+      let ok = false;
+      for(const y of b){ if (deepEqual(x,y,seen)) { ok=true; break; } }
+      if (!ok) return false;
+    }
+    return true;
+  }
+  if (a instanceof Map && b instanceof Map){
+    if (a.size !== b.size) return false;
+    for(const [ka,va] of a){
+      let found = false;
+      for(const [kb,vb] of b){
+        if (deepEqual(ka,kb,seen) && deepEqual(va,vb,seen)){ found = true; break; }
+      }
+      if (!found) return false;
+    }
+    return true;
+  }
+  const ka = Object.keys(a), kb = Object.keys(b);
+  if (ka.length !== kb.length) return false;
+  ka.sort(); kb.sort();
+  for(let i=0;i<ka.length;i++){ if(ka[i]!==kb[i]) return false; }
+  for(const k of ka){ if(!deepEqual(a[k], b[k], seen)) return false; }
+  return true;
+}`,
+    tests: async (userFn, log) => {
+      const eq = userFn;
+      log("primitives", eq(1,1) && !eq(1,2) && eq(NaN,NaN));
+      log("date", eq(new Date(0), new Date(0)) && !eq(new Date(1), new Date(2)));
+      log("array", eq([1,[2]], [1,[2]]) && !eq([1,2], [2,1]));
+      log("object", eq({a:1,b:{c:2}}, {b:{c:2},a:1}));
+      log("set", eq(new Set([1,2]), new Set([2,1])));
+      log("map", eq(new Map([[{x:1},2]]), new Map([[{x:1},2]])));
+      const a={}; a.self=a; const b={}; b.self=b;
+      log("cycle", eq(a,b));
+    }
+  },
+  parseQuery: {
+    title: "parseQueryString",
+    prompt:
+`Viết parseQueryString(qs) -> object:
+- 'a=1&b=2&b=3&c' => { a:'1', b:['2','3'], c:'' }
+- Decode component, bỏ '?' đầu nếu có.
+- Khóa trùng -> mảng, khóa không value -> ''.`,
+    template:
+`function parseQueryString(qs){
+  qs = (qs || '').replace(/^\\?/, '');
+  const out = {};
+  if (!qs) return out;
+  for (const part of qs.split('&')){
+    if (!part) continue;
+    const [kRaw, vRaw] = part.split('=');
+    const k = decodeURIComponent(kRaw || '');
+    const v = decodeURIComponent(vRaw ?? '');
+    if (k in out){
+      const cur = out[k];
+      out[k] = Array.isArray(cur) ? cur.concat(v) : [cur, v];
+    } else {
+      out[k] = v;
+    }
+  }
+  return out;
+}`,
+    tests: async (fn, log) => {
+      const o = fn('?a=1&b=2&b=3&c');
+      const ok1 = o.a==='1' && Array.isArray(o.b) && o.b[0]==='2' && o.b[1]==='3' && o.c==='';
+      const o2 = fn('x=%E2%9C%93&x=ok');
+      const ok2 = Array.isArray(o2.x) && o2.x[0]==='✓' && o2.x[1]==='ok';
+      log("basic", ok1);
+      log("decode + array", ok2);
+    }
+  },
+  scheduler: {
+    title: "promisePool (concurrency)",
+    prompt:
+`Viết promisePool(tasks, n) chạy tối đa n promise cùng lúc.
+- tasks: mảng hàm () => Promise<any>.
+- Trả về Promise hoàn tất khi tất cả xong.
+- Giữ thứ tự kết quả theo tasks.
+
+Gợi ý: dùng hàng đợi + đệ quy hoặc worker loop.`,
+    template:
+`async function promisePool(tasks, n=2){
+  const out = new Array(tasks.length);
+  let i = 0, active = 0;
+  return await new Promise((resolve, reject)=>{
+    const runNext = () => {
+      if (i >= tasks.length && active === 0) return resolve(out);
+      while (active < n && i < tasks.length) {
+        const idx = i++, t = tasks[idx];
+        active++;
+        Promise.resolve().then(t).then(
+          v => { out[idx]=v; active--; runNext(); },
+          e => reject(e)
+        );
+      }
+    };
+    runNext();
+  });
+}`,
+    tests: async (fn, log) => {
+      const sleep = ms => new Promise(r=>setTimeout(r, ms));
+      const tasks = [100,50,10,30,20].map((ms, i)=>()=> sleep(ms).then(()=>i*2));
+      const t0 = performance.now();
+      const res = await fn(tasks, 2);
+      const dt = performance.now() - t0;
+      const okOrder = res.join(',') === '0,2,4,6,8';
+      const okTime = dt >= 100+50+30 && dt < 1000;
+      log("results order", okOrder);
+      log("concurrency timing", okTime);
+    }
+  },
+  retry: {
+    title: "retryWithBackoff",
+    prompt:
+`Viết retryWithBackoff(fn, retries, baseMs, factor=2):
+- Gọi fn() trả Promise; nếu reject thì chờ baseMs * factor^attempt rồi thử lại.
+- Dừng khi thành công hoặc hết retries; nếu hết vẫn fail, ném lỗi cuối.`,
+    template:
+`async function retryWithBackoff(fn, retries=3, baseMs=50, factor=2){
+  let attempt = 0, lastErr;
+  while (attempt <= retries){
+    try { return await fn(); }
+    catch (e){ lastErr = e; if (attempt === retries) break; }
+    const delay = baseMs * (factor ** attempt);
+    await new Promise(r=>setTimeout(r, delay));
+    attempt++;
+  }
+  throw lastErr;
+}`,
+    tests: async (fn, log) => {
+      let tries = 0;
+      const task = async ()=>{
+        tries++;
+        if (tries < 3) throw new Error('fail');
+        return 42;
+      };
+      const t0 = performance.now();
+      const v = await fn(task, 3, 10, 2);
+      const dt = performance.now() - t0;
+      log("value", v===42);
+      log("waited", dt >= 10 && dt < 1000);
+      let threw = false;
+      try{
+        tries = 0;
+        await fn(async()=>{ throw new Error('x'); }, 1, 5, 2);
+      }catch{ threw = true; }
+      log("throws after retries", threw);
+    }
+  }
+};
+
+const kataTitle = document.getElementById('kataTitle');
+const kataPrompt = document.getElementById('kataPrompt');
+const codeEditor = document.getElementById('codeEditor');
+const testResult = document.getElementById('testResult');
+let currentKata = 'memoize';
+
+function loadKata(key){
+  const k = KATAS[key];
+  currentKata = key;
+  kataTitle.textContent = k.title;
+  kataPrompt.textContent = k.prompt;
+  codeEditor.value = k.template;
+  testResult.textContent = 'Chưa chạy test.';
+}
+document.querySelectorAll('[data-kata]').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('[data-kata]').forEach(b=>b.classList.toggle('active', b===btn));
+    loadKata(btn.getAttribute('data-kata'));
+  });
+});
+document.getElementById('resetCode').addEventListener('click', ()=>{
+  codeEditor.value = KATAS[currentKata].template;
+  testResult.textContent = 'Đã reset code.';
+});
+
+/* ------- Run Tests ------- */
+function safeEvalUserFunction(src){
+  const sandbox = {};
+  const fn = new Function('sandbox', `
+    "use strict";
+    const module = { exports: {} }; const exports = module.exports;
+    (function(){
+${src}
+    }).call(sandbox);
+    return { module, exports, sandbox };
+  `);
+  return fn(sandbox);
+}
+
+document.getElementById('runTests').addEventListener('click', async ()=>{
+  testResult.textContent = 'Đang chạy tests...';
+  testResult.classList.remove('pass', 'fail');
+
+  let user;
+  try{
+    const out = safeEvalUserFunction(codeEditor.value);
+    user = out.module.exports || out.exports;
+    if (typeof user !== 'function') {
+      const vals = Object.values(out.sandbox).filter(v => typeof v === 'function');
+      if (vals.length) user = vals[0];
+    }
+    if (typeof user !== 'function') throw new Error('Không tìm thấy function để test. Hãy export bằng module.exports = function ... hoặc định nghĩa hàm ở scope cao nhất.');
+  }catch(e){
+    testResult.textContent = 'Lỗi biên dịch/chạy code: ' + e.message;
+    testResult.classList.add('fail');
+    return;
+  }
+
+  const logs = [];
+  const log = (name, ok) => { logs.push(`${ok ? '✔' : '✘'} ${name} ${ok ? '' : '(fail)'}`); };
+
+  try{
+    await KATAS[currentKata].tests(user, log);
+    const allPass = logs.every(l => l.startsWith('✔'));
+    testResult.textContent = logs.join('\n');
+    testResult.classList.toggle('pass', allPass);
+    testResult.classList.toggle('fail', !allPass);
+  }catch(e){
+    testResult.textContent = 'Test runner error: ' + (e && e.message ? e.message : e);
+    testResult.classList.add('fail');
+  }
+});
+
+// Initialize kata
+loadKata(currentKata);
+</script>
+</body>
+</html>

@@ -1,0 +1,760 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Câu hỏi phỏng vấn Database -- Junior & Middle (Chi tiết + PostgreSQL JSON/JSONB)</title>
+  <style>
+    :root{
+      --bg:#0b1020; --panel:#111735; --panel-2:#0e1430;
+      --text:#e6ebff; --muted:#a9b3d1; --accent:#7aa2ff;
+      --ok:#3ddc97; --warn:#ffd166; --err:#ff6b6b;
+      --chip:#1b2347; --chip-border:#2a376b;
+      --shadow: 0 10px 30px rgba(0,0,0,.35);
+      --radius:14px;
+    }
+    *{box-sizing:border-box}
+    html, body{
+      height:100%;
+      margin:0;
+      background:
+        radial-gradient(1400px 900px at 80% -10%, #1a245a 0%, #0b1020 45%, #0b1020 100%),
+        var(--bg);
+      color:var(--text);
+      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+    }
+    header{
+      text-align:center; padding:18px 12px 6px;
+    }
+    h1{ font-size: clamp(18px, 4vw, 28px); margin:0 0 6px; letter-spacing:.2px; }
+    .subtitle{ color:var(--muted); font-size: clamp(12px, 2.5vw, 14px); }
+    .wrap{ max-width:1100px; margin:0 auto; padding:12px; display:grid; gap:12px; }
+
+    .panel{
+      background: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02));
+      border:1px solid rgba(255,255,255,0.12);
+      border-radius:12px;
+      box-shadow: var(--shadow);
+    }
+
+    .controls{
+      padding:12px;
+      display:grid;
+      gap:10px;
+    }
+    .row{
+      display:flex; gap:8px; flex-wrap:wrap; align-items:center;
+    }
+    .search{
+      flex:1 1 260px;
+      display:flex; align-items:center; gap:8px;
+      background: var(--panel-2);
+      border:1px solid rgba(255,255,255,0.12);
+      border-radius:10px; padding:8px 10px;
+    }
+    .search input{
+      background:transparent; border:0; outline:none; color:var(--text); width:100%;
+    }
+    .btn{
+      background: var(--accent); color:#0b1020; border:0;
+      padding:10px 12px; border-radius:10px; font-weight:700; cursor:pointer;
+    }
+    .chip{
+      background: var(--chip);
+      border:1px solid var(--chip-border);
+      color:var(--text);
+      padding:8px 10px; border-radius:10px;
+      font-size:12px; display:flex; gap:8px; align-items:center;
+      cursor:pointer; user-select:none;
+    }
+    .chip input{ accent-color: var(--accent); }
+
+    .grid{
+      padding:12px;
+      display:grid; gap:12px;
+    }
+    .topic{
+      background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02));
+      border:1px solid rgba(255,255,255,0.12);
+      border-radius:12px;
+      overflow:hidden;
+    }
+    .topic-hdr{
+      padding:12px;
+      display:flex; align-items:center; justify-content:space-between;
+      cursor:pointer;
+    }
+    .topic-title{
+      font-weight:800; font-size:14px; letter-spacing:.2px;
+    }
+    .topic-body{
+      padding:12px;
+      display:grid; gap:10px;
+    }
+
+    .q{
+      border:1px solid rgba(255,255,255,0.12);
+      background: linear-gradient(180deg, rgba(20,26,60,.9), rgba(14,20,45,.9));
+      border-radius:12px;
+      padding:10px;
+    }
+    .q-hdr{
+      display:flex; align-items:flex-start; justify-content:space-between; gap:8px;
+    }
+    .q-title{
+      font-weight:700; font-size:13px; line-height:1.4;
+    }
+    .tags{
+      display:flex; gap:6px; flex-wrap:wrap;
+    }
+    .tag{
+      font-size:10px; padding:3px 6px; border-radius:999px;
+      background: rgba(122,162,255,.15); border:1px solid rgba(122,162,255,.35);
+      color:var(--text);
+    }
+    .lvl-jr{ background: rgba(61,220,151,.15); border-color: rgba(61,220,151,.4); }
+    .lvl-md{ background: rgba(255,209,102,.15); border-color: rgba(255,209,102,.45); }
+    .lvl-adv{ background: rgba(155,85,229,.15); border-color: rgba(155,85,229,.45); }
+    .q-actions{
+      display:flex; gap:6px; flex-wrap:wrap;
+    }
+    .small-btn{
+      background:rgba(255,255,255,0.08);
+      border:1px solid rgba(255,255,255,0.15);
+      color:var(--text);
+      padding:6px 8px; border-radius:8px; font-size:12px; cursor:pointer;
+    }
+    .a{
+      margin-top:8px; color:var(--muted); font-size:13px; line-height:1.55; display:none;
+    }
+    .show .a{ display:block; }
+
+    .footer{
+      color:var(--muted); font-size:12px; text-align:center; padding:10px;
+    }
+
+    @media (max-width:700px){
+      .q-hdr{ flex-direction:column; align-items:stretch; }
+      .q-actions{ align-self:flex-end; }
+    }
+
+    .a ul{ padding-left:18px; margin:6px 0; }
+    .a li{ margin:4px 0; }
+    .a code{ background: rgba(255,255,255,0.08); padding:1px 4px; border-radius:4px; }
+    .a .ex{ opacity:.9 }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Câu hỏi phỏng vấn Database</h1>
+    <div class="subtitle">Bộ câu hỏi cho Junior và Middle (chi tiết) + PostgreSQL JSON/JSONB nâng cao</div>
+  </header>
+
+  <div class="wrap">
+    <div class="panel controls">
+      <div class="row">
+        <div class="search">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M21 21l-3.8-3.8M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15Z" stroke="#a9b3d1" stroke-width="2" stroke-linecap="round"/></svg>
+          <input id="search" type="text" placeholder="Tìm kiếm câu hỏi (ví dụ: jsonb, GIN, @>, path, tsvector)..." />
+        </div>
+        <button id="clear" class="btn" style="background:#3ddc97;color:#07121f">Xóa lọc</button>
+      </div>
+      <div class="row">
+        <label class="chip"><input type="checkbox" id="f-jr" checked /> Junior</label>
+        <label class="chip"><input type="checkbox" id="f-md" checked /> Middle</label>
+        <label class="chip"><input type="checkbox" id="f-adv" checked /> Advanced</label>
+        <span style="width:1px;height:22px;background:rgba(255,255,255,0.12)"></span>
+        <label class="chip"><input type="checkbox" class="f-topic" data-topic="fundamentals" checked /> Nền tảng</label>
+        <label class="chip"><input type="checkbox" class="f-topic" data-topic="design" checked /> Thiết kế</label>
+        <label class="chip"><input type="checkbox" class="f-topic" data-topic="performance" checked /> Tối ưu</label>
+        <label class="chip"><input type="checkbox" class="f-topic" data-topic="transactions" checked /> Giao dịch</label>
+        <label class="chip"><input type="checkbox" class="f-topic" data-topic="nosql" checked /> NoSQL</label>
+        <label class="chip"><input type="checkbox" class="f-topic" data-topic="practical" checked /> Thực hành</label>
+        <label class="chip"><input type="checkbox" class="f-topic" data-topic="scenarios" checked /> Tình huống</label>
+        <label class="chip"><input type="checkbox" class="f-topic" data-topic="pgjson" checked /> PostgreSQL JSON/JSONB nâng cao</label>
+      </div>
+    </div>
+
+    <div id="container" class="grid"></div>
+
+    <div class="footer panel">
+      <div class="footer">
+        Gợi ý: Khi trả lời, hãy nêu trade-offs, ví dụ thực tế và cách đo đạc (EXPLAIN ANALYZE, pg_stat_statements). Với JSONB, đo index GIN và kiểm tra kế hoạch dùng @>.
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Khối đáp án chi tiết cũ (rút gọn trong biến A) + bổ sung nhóm pgJSON nâng cao trong biến J
+    const A = {
+      sql_vs_nosql: `
+- SQL (quan hệ):
+  - Lược đồ cố định, ràng buộc mạnh (PK/FK/UNIQUE/CHECK).
+  - ACID mạnh, JOIN/aggregation phức tạp tốt.
+  - Scale dọc là chủ đạo; partition/sharding phức tạp hơn.
+- NoSQL (phi quan hệ):
+  - Schema linh hoạt; mô hình dữ liệu theo truy vấn.
+  - Thường eventual consistency; scale ngang tốt.
+- Chọn: OLTP, chuẩn hoá, nhiều JOIN → SQL. Metadata linh hoạt, scale ngang nặng → NoSQL.
+      `,
+      pk_fk: `
+- PK: định danh duy nhất, có index kèm, thường NOT NULL.
+- FK: tham chiếu PK bảng khác, đảm bảo toàn vẹn; có ON DELETE/UPDATE (CASCADE/RESTRICT/SET NULL).
+      `,
+      normalization: `
+- 1NF: giá trị nguyên tử; không lặp cột.
+- 2NF: 1NF + thuộc tính không khoá phụ thuộc toàn bộ khóa (với khóa ghép).
+- 3NF: 2NF + không phụ thuộc bắc cầu giữa thuộc tính không khoá.
+- Giảm trùng lặp, tránh anomaly.
+      `,
+      denormalization: `
+- Mục tiêu: giảm JOIN, tối ưu đọc.
+- Đánh đổi: đồng bộ dữ liệu, rủi ro sai lệch.
+- Dùng cho feed, dashboard, báo cáo đọc nhiều.
+      `,
+      index: `
+- Tăng tốc WHERE/JOIN/ORDER; tốn dung lượng, làm chậm ghi.
+- Chọn cột có selectivity cao; tránh over-indexing; theo dõi usage.
+      `,
+      btree_hash: `
+- B-Tree: hỗ trợ range/order; mặc định.
+- Hash: tối ưu tra cứu '='; không range.
+      `,
+      like_wildcard: `
+- '%abc%': không dùng B-Tree bình thường.
+- Dùng full-text, trigram (pg_trgm), hoặc đổi chiến lược.
+      `,
+      joins: `
+- INNER: chỉ dòng khớp.
+- LEFT/RIGHT: giữ bên tương ứng, phần kia NULL nếu không khớp.
+- FULL: giữ cả hai.
+      `,
+      acid: `
+- Atomicity, Consistency, Isolation, Durability: bảo đảm giao dịch an toàn và bền vững.
+      `,
+      transaction: `
+- Nhóm nhiều lệnh; BEGIN...COMMIT/ROLLBACK; giữ ngắn để giảm lock.
+      `,
+      rel_model: `
+- 1-1: share PK hoặc FK UNIQUE.
+- 1-n: FK ở bảng nhiều.
+- n-n: bảng trung gian.
+      `,
+      composite_leftmost: `
+- Index (a,b,c) dùng tốt khi filter theo a hoặc (a,b).
+- Đặt cột có selectivity cao lên trước; cân nhắc ORDER BY.
+      `,
+      order_schema: `
+- orders(id,user_id,status,total,created_at,...).
+- order_items(order_id,item_id,qty,price,...); PK (order_id,item_id).
+- Index: orders(user_id,status,created_at DESC), order_items(order_id), payments(order_id)...
+- Partial index theo status, CHECK ràng buộc.
+      `,
+      part_vs_shard: `
+- Partitioning: trong 1 cụm; quản trị/plan tốt hơn.
+- Sharding: nhiều node độc lập; routing/cross-shard phức tạp.
+      `,
+      replicas_rw: `
+- Primary ghi; replicas đọc.
+- Lag: read-your-writes đọc primary hoặc dùng token; chọn strong vs eventual tuỳ nghiệp vụ.
+      `,
+      groupby_aggr: `
+- GROUP BY nhóm; COUNT/SUM/AVG/MIN/MAX.
+- Cột không aggregate phải có trong GROUP BY (SQL chuẩn).
+      `,
+      d_t_d: `
+- DELETE: có điều kiện, log/rollback, chậm khi nhiều.
+- TRUNCATE: xóa nhanh toàn bảng, reset counter.
+- DROP: xóa đối tượng.
+      `,
+      explain: `
+- EXPLAIN/ANALYZE: xem plan thực tế; chú ý Seq Scan/Index Scan, Join types, ước lượng vs thực tế.
+- Tối ưu: index phù hợp, viết truy vấn sargable, cập nhật statistics.
+      `,
+      covering: `
+- Index-only scan nếu index chứa đủ cột.
+- Ví dụ: (user_id, created_at, id) cover SELECT id, created_at WHERE user_id=? ORDER BY created_at DESC.
+      `,
+      write_amp_hot: `
+- Write amplification: nhiều ghi vật lý cho 1 ghi logic (WAL, page split).
+- HOT update (Postgres): không cập nhật index nếu cột indexed không đổi.
+      `,
+      text_search: `
+- FTS: tsvector/tsquery + GIN; chọn dictionary (english/simple).
+- Trigram (pg_trgm) cho LIKE/ILIKE fuzzy.
+      `,
+      isolation_levels: `
+- Read Uncommitted, Read Committed, Repeatable Read, Serializable.
+- Trade-off giữa song song và nhất quán.
+      `,
+      read_anomalies: `
+- Dirty: đọc chưa commit.
+- Non-repeatable: cùng dòng, hai lần đọc khác nhau.
+- Phantom: tập kết quả thay đổi.
+      `,
+      deadlock: `
+- Khoá chéo; tránh bằng thứ tự khóa nhất quán, giữ transaction ngắn, retry + backoff, advisory lock khi cần.
+      `,
+      booking_isolation: `
+- Serializable/Repeatable Read + unique constraint (resource_id, timeslot) với UPSERT để tránh double-book.
+      `,
+      upsert: `
+- Idempotent writes:
+  - Postgres: INSERT ... ON CONFLICT DO UPDATE/NOTHING.
+  - MySQL: ON DUPLICATE KEY UPDATE.
+      `,
+      nosql_types: `
+- Document, Key-Value, Column-family, Graph — chọn theo pattern truy vấn.
+      `,
+      cassandra_pk: `
+- Partition key phân tán đều; dùng clustering columns cho range.
+      `,
+      mongo_indexes: `
+- Compound, Partial, TTL, Sparse — tối ưu theo truy vấn và dữ liệu thiếu.
+      `,
+      mongo_embed_ref: `
+- Embed: đọc 1 lần, dữ liệu gắn chặt. Reference: tái sử dụng, n-n, đối tượng lớn.
+      `,
+      perf_metrics: `
+- QPS/TPS, p95/p99, slow queries, lock waits, cache hit, replication lag.
+      `,
+      cache_strategies: `
+- Read-through, write-through, write-behind; anti-stampede; key/TTL hợp lý.
+      `,
+      zero_downtime_mig: `
+- Schema tương thích ngược → backfill → dual-write/shadow → chuyển đổi → dọn cũ. Tránh ALTER lock dài.
+      `,
+      cdc: `
+- CDC từ binlog/WAL (Debezium...) để đồng bộ search/cache/data lake gần thời gian thực.
+      `,
+      feed_perf: `
+- Cursor-based pagination theo index, covering index, CDN/Redis cache, precompute, giảm N+1.
+      `,
+      billion_events: `
+- Partition theo tenant/time, composite index, compression, TSDB/columnar cho analytics, tách OLTP/OLAP.
+      `,
+      deadlock_sku: `
+- Thứ tự khóa nhất quán, tách transaction, SKIP LOCKED, optimistic concurrency + retry.
+      `,
+      heavy_join_report: `
+- Materialized view/ETL sang DW, pre-aggregate, index join/filter, giảm join runtime.
+      `
+    };
+
+    // Câu trả lời nâng cao PostgreSQL JSON/JSONB
+    const J = {
+      j1: `
+JSON vs JSONB:
+- JSON: lưu text gốc, giữ thứ tự key/whitespace; không có GIN trực tiếp.
+- JSONB: dạng nhị phân đã parse, sắp key, bỏ trùng; hỗ trợ GIN/BTREE, truy vấn nhanh.
+- Chọn:
+  - Truy vấn bên trong payload, cần index → JSONB.
+  - Lưu raw/log, ít truy vấn nội bộ → JSON.
+      `,
+      j2: `
+Toán tử JSON/JSONB:
+- ->, ->>: truy cập key/index (JSON) hoặc text.
+- #>, #>>: truy cập theo path mảng text.
+- @>: containment (JSONB chứa JSONB con).
+- ?, ?|, ?&: tồn tại key (một/bất kỳ/tất cả).
+- -, #-: xóa key/theo path. ||: merge JSONB.
+- Lưu ý: containment @> chỉ cho JSONB.
+      `,
+      j3: `
+Index JSONB:
+- GIN jsonb_ops (mặc định): đa dụng, hỗ trợ @>, ?, ?|, ?&; index lớn hơn.
+- GIN jsonb_path_ops: tối ưu @>, index nhỏ; ít toán tử (chọn khi workload chủ yếu @>).
+- Index biểu thức:
+  - CREATE INDEX ON t ((data->>'status'));
+  - CREATE INDEX ON t (((data->>'age')::int));
+- Partial index: WHERE (data->>'status')='active' để thu nhỏ index.
+      `,
+      j4: `
+Truy vấn lồng nhau:
+SELECT id
+FROM orders
+WHERE data->>'status'='paid'
+  AND EXISTS (
+    SELECT 1
+    FROM jsonb_array_elements(data->'line_items') li
+    WHERE (li->>'item_id')::int=123
+      AND (li->>'qty')::int>=2
+  );
+- Tối ưu: cân nhắc @> nếu mẫu đơn giản hoặc chuẩn hoá line_items.
+      `,
+      j5: `
+Full-text search trên JSONB:
+ALTER TABLE docs ADD COLUMN fts tsvector GENERATED ALWAYS AS (
+  setweight(to_tsvector('simple', coalesce(data->>'title','')), 'A') ||
+  setweight(to_tsvector('english', coalesce(data->>'body','')), 'B')
+) STORED;
+CREATE INDEX ON docs USING gin (fts);
+SELECT id FROM docs WHERE fts @@ plainto_tsquery('english','postgres jsonb');
+      `,
+      j6: `
+JSONPath vs LATERAL:
+- JSONPath (PG12+): jsonb_path_exists(data, '$.items[*] ? (@.qty >= 2)')
+- LATERAL: FROM t, LATERAL jsonb_array_elements(t.data->'items') it ...
+- Chọn JSONPath cho biểu thức ngắn gọn; LATERAL cho join/aggregate sâu.
+      `,
+      j7: `
+@> vs jsonb_array_elements:
+- @> nhanh với GIN khi mẫu vừa phải.
+- jsonb_array_elements tạo nhiều row ảo → tốn CPU/memory khi mảng lớn.
+- Đo EXPLAIN ANALYZE; dùng @> sơ bộ để giảm tập trước khi unnest.
+      `,
+      j8: `
+Khi nào normalise thay vì JSONB:
+- Cần JOIN/reporting thường xuyên; cần ràng buộc/UNIQUE/FOREIGN KEY; dữ liệu lặp.
+- JSONB phù hợp metadata linh hoạt, query ít.
+- Mô hình hybrid: cột chuẩn hoá cho trường hay lọc + JSONB cho phần còn lại.
+      `,
+      j9: `
+Cập nhật JSONB:
+- jsonb_set(target, '{a,b}', to_jsonb(123), true)
+- jsonb_insert, toán tử ||
+- Lưu ý: update JSONB ghi lại toàn bộ MVCC row → tốn I/O với payload lớn; tách cột JSONB nhỏ khi cập nhật thường xuyên.
+      `,
+      j10: `
+Validation bằng CHECK/trigger:
+- CHECK ( (data->>'type') IN ('A','B') )
+- CHECK ( jsonb_typeof(data->'count')='number' )
+- Triggers/plpgsql để rule phức tạp; hoặc validate JSON Schema ở app trước khi INSERT/UPDATE.
+      `,
+      j11: `
+GIN cho existence/containment:
+CREATE INDEX ON t USING gin (data jsonb_ops);
+-- Query:
+WHERE data ? 'status'
+OR data ?| array['status','category']
+OR data @> '{"status":"active"}';
+-- Partial GIN để nhỏ gọn: WHERE data ? 'status'.
+      `,
+      j12: `
+jsonb_ops vs jsonb_path_ops:
+- jsonb_ops: đa dụng, hỗ trợ nhiều toán tử; index to hơn.
+- jsonb_path_ops: tối ưu @>, index nhỏ, ít toán tử; cân nhắc khi workload chủ yếu containment.
+- PG12+: jsonb_ops thường khuyến nghị; path_ops khi đo đạc có lợi.
+      `,
+      j13: `
+Unnest mảng lớn không tốn tài nguyên:
+WITH base AS (
+  SELECT id, data FROM t
+  WHERE data @> '{"status":"paid"}'
+)
+SELECT id, li->>'item_id'
+FROM base, LATERAL jsonb_array_elements(base.data->'line_items') li
+WHERE (li->>'qty')::int >= 2;
+- Dùng điều kiện sơ bộ @>/JSONPath để giảm tập trước khi unnest.
+      `,
+      j14: `
+Chỉ mục cho nhiều trường JSONB:
+- Một GIN chung (data) + vài index biểu thức cho trường hay lọc/ORDER.
+- Partial index để giảm size.
+CREATE INDEX ON t USING gin (data);
+CREATE INDEX ON t ((data->>'status'));
+CREATE INDEX ON t (((data->>'age')::int)) WHERE (data ? 'age');
+      `,
+      j15: `
+Bẫy hiệu năng OLTP với JSONB:
+- Over-indexing GIN → index nặng, VACUUM tốn.
+- Update payload lớn thường xuyên → write amplification.
+- Lạm dụng jsonb_array_elements trong request path.
+- Cast trong WHERE không có index biểu thức → seq scan.
+- Thiếu statistics cho biểu thức JSONB → plan kém.
+      `,
+      j16: `
+UNIQUE bên trong JSONB:
+CREATE UNIQUE INDEX uniq_ext_id ON users ((data->>'external_id'));
+-- Partial unique khi field tuỳ chọn:
+CREATE UNIQUE INDEX uniq_ext_id ON users ((data->>'external_id'))
+WHERE (data ? 'external_id');
+      `,
+      j17: `
+JSONB vs hstore:
+- hstore: key-value phẳng text→text, nhẹ, index nhỏ; không lồng nhau.
+- JSONB: cấu trúc phong phú, lồng nhau, tích hợp JSONPath/FTS.
+- Chọn hstore khi metadata phẳng hiệu năng cao; JSONB khi cần cấu trúc.
+      `,
+      j18: `
+Migrate JSON → JSONB trên bảng lớn:
+1) Thêm cột data_b jsonb.
+2) Backfill theo batch (PK range/ctid), tránh lock dài.
+3) CREATE INDEX CONCURRENTLY.
+4) App đọc/ghi data_b.
+5) Swap rename + drop cũ khi an toàn.
+- Theo dõi bloat, autovacuum.
+      `,
+      j19: `
+Kiểm soát bloat khi update JSONB:
+- Tách phần thay đổi thường xuyên sang cột JSONB nhỏ riêng.
+- Tune autovacuum (scale_factor thấp hơn).
+- Fillfactor để giảm page split.
+- Batch updates.
+      `,
+      j20: `
+Schema-on-read + nhất quán:
+CREATE VIEW orders_v AS
+SELECT id,
+       (data->>'status')::text AS status,
+       (data->>'amount')::numeric AS amount,
+       data
+FROM orders;
+- CHECK/trigger cho trường quan trọng.
+- Validate JSON Schema ở ứng dụng.
+- Bổ sung index biểu thức khi pattern ổn định.
+      `
+    };
+
+    const DATA = [
+      {
+        id: 'fundamentals',
+        title: 'Nền tảng',
+        items: [
+          { lvl:'jr', q:'Khác nhau giữa SQL và NoSQL?', a: A.sql_vs_nosql },
+          { lvl:'jr', q:'Primary Key và Foreign Key là gì?', a: A.pk_fk },
+          { lvl:'jr', q:'Normalization là gì? 1NF/2NF/3NF?', a: A.normalization },
+          { lvl:'jr', q:'Denormalization là gì? Khi nào dùng?', a: A.denormalization },
+          { lvl:'jr', q:'Index là gì? Ưu/nhược?', a: A.index },
+          { lvl:'jr', q:'B-Tree vs Hash index?', a: A.btree_hash },
+          { lvl:'jr', q:'LIKE "%abc%" có dùng index không?', a: A.like_wildcard },
+          { lvl:'jr', q:'Các loại JOIN phổ biến?', a: A.joins },
+          { lvl:'jr', q:'ACID là gì?', a: A.acid },
+          { lvl:'jr', q:'Transaction là gì? Vì sao cần?', a: A.transaction },
+        ]
+      },
+      {
+        id: 'design',
+        title: 'Thiết kế lược đồ',
+        items: [
+          { lvl:'jr', q:'Mô hình hóa quan hệ 1-1, 1-n, n-n?', a: A.rel_model },
+          { lvl:'jr', q:'Composite index là gì? Quy tắc leftmost?', a: A.composite_leftmost },
+          { lvl:'md', q:'Thiết kế schema tính năng theo dõi đơn hàng?', a: A.order_schema },
+          { lvl:'md', q:'Partitioning vs Sharding?', a: A.part_vs_shard },
+          { lvl:'md', q:'Read replicas và chiến lược đọc/ghi?', a: A.replicas_rw },
+        ]
+      },
+      {
+        id: 'performance',
+        title: 'Tối ưu & vận hành',
+        items: [
+          { lvl:'jr', q:'Group By và Aggregates cơ bản?', a: A.groupby_aggr },
+          { lvl:'jr', q:'DELETE vs TRUNCATE vs DROP?', a: A.d_t_d },
+          { lvl:'md', q:'EXPLAIN/EXPLAIN ANALYZE dùng thế nào?', a: A.explain },
+          { lvl:'md', q:'Covering index là gì?', a: A.covering },
+          { lvl:'md', q:'Write amplification & HOT update (Postgres)?', a: A.write_amp_hot },
+          { lvl:'md', q:'Tối ưu tìm kiếm text?', a: A.text_search },
+        ]
+      },
+      {
+        id: 'transactions',
+        title: 'Giao dịch & cô lập',
+        items: [
+          { lvl:'jr', q:'Isolation levels?', a: A.isolation_levels },
+          { lvl:'jr', q:'Dirty/Non-repeatable/Phantom read?', a: A.read_anomalies },
+          { lvl:'md', q:'Deadlock là gì? Tránh thế nào?', a: A.deadlock },
+          { lvl:'md', q:'Isolation cho hệ thống giữ chỗ/đặt phòng?', a: A.booking_isolation },
+          { lvl:'md', q:'UPSERT/INSERT ON CONFLICT dùng khi nào?', a: A.upsert },
+        ]
+      },
+      {
+        id: 'nosql',
+        title: 'NoSQL',
+        items: [
+          { lvl:'jr', q:'Các kiểu NoSQL phổ biến?', a: A.nosql_types },
+          { lvl:'md', q:'Partition key trong Cassandra chọn thế nào?', a: A.cassandra_pk },
+          { lvl:'md', q:'MongoDB: compound/partial/TTL/sparse index?', a: A.mongo_indexes },
+          { lvl:'md', q:'Embed vs Reference trong MongoDB?', a: A.mongo_embed_ref },
+        ]
+      },
+      {
+        id: 'practical',
+        title: 'Thực hành & best practices',
+        items: [
+          { lvl:'jr', q:'Chỉ số hiệu năng bạn theo dõi?', a: A.perf_metrics },
+          { lvl:'md', q:'Cache strategies?', a: A.cache_strategies },
+          { lvl:'md', q:'Migration zero-downtime?', a: A.zero_downtime_mig },
+          { lvl:'md', q:'CDC (Change Data Capture) là gì?', a: A.cdc },
+        ]
+      },
+      {
+        id: 'scenarios',
+        title: 'Tình huống thực tế',
+        items: [
+          { lvl:'md', q:'GET /feed chậm dần khi dữ liệu lớn?', a: A.feed_perf },
+          { lvl:'md', q:'Bảng events 1 tỉ dòng, query theo tenant_id + time?', a: A.billion_events },
+          { lvl:'md', q:'Deadlock khi cập nhật tồn kho và đơn hàng?', a: A.deadlock_sku },
+          { lvl:'md', q:'Báo cáo ngày JOIN 5 bảng lớn?', a: A.heavy_join_report },
+        ]
+      },
+      {
+        id: 'pgjson',
+        title: 'PostgreSQL JSON/JSONB nâng cao',
+        items: [
+          { lvl:'adv', q:'JSON vs JSONB khác nhau thế nào? Khi nào chọn loại nào?', a: J.j1 },
+          { lvl:'adv', q:'Các toán tử JSON/JSONB quan trọng và khác biệt?', a: J.j2 },
+          { lvl:'adv', q:'Tạo index hiệu quả cho JSONB: GIN jsonb_ops vs jsonb_path_ops và index biểu thức?', a: J.j3 },
+          { lvl:'adv', q:'Viết truy vấn lọc điều kiện lồng nhau trên JSONB (ví dụ line_items)?', a: J.j4 },
+          { lvl:'adv', q:'Tối ưu full-text search trên JSONB (tsvector + GIN)?', a: J.j5 },
+          { lvl:'adv', q:'jsonb_path_query/jsonb_path_exists vs LATERAL jsonb_array_elements?', a: J.j6 },
+          { lvl:'adv', q:'So sánh hiệu năng containment @> với expand mảng + filter?', a: J.j7 },
+          { lvl:'adv', q:'Khi nào normalise thay vì JSONB? Mô hình hybrid?', a: J.j8 },
+          { lvl:'adv', q:'Cập nhật JSONB hiệu quả (jsonb_set/jsonb_insert/||)?', a: J.j9 },
+          { lvl:'adv', q:'Ràng buộc/validation trên JSONB bằng CHECK/trigger?', a: J.j10 },
+          { lvl:'adv', q:'GIN index cho key existence và containment: cách dùng?', a: J.j11 },
+          { lvl:'adv', q:'jsonb_ops vs jsonb_path_ops: khi nào cân nhắc cái nào?', a: J.j12 },
+          { lvl:'adv', q:'Unnest mảng JSONB lớn không quá tốn tài nguyên?', a: J.j13 },
+          { lvl:'adv', q:'Chiến lược index khi có nhiều trường JSONB cần lọc?', a: J.j14 },
+          { lvl:'adv', q:'Bẫy hiệu năng khi dùng JSONB trong OLTP?', a: J.j15 },
+          { lvl:'adv', q:'UNIQUE trên trường bên trong JSONB?', a: J.j16 },
+          { lvl:'adv', q:'JSONB vs hstore: khi nào dùng hstore?', a: J.j17 },
+          { lvl:'adv', q:'Migrate từ JSON sang JSONB trên bảng lớn?', a: J.j18 },
+          { lvl:'adv', q:'Kiểm soát bloat khi cập nhật JSONB thường xuyên?', a: J.j19 },
+          { lvl:'adv', q:'Schema-on-read với JSONB và đảm bảo nhất quán?', a: J.j20 },
+        ]
+      }
+    ];
+
+    const container = document.getElementById('container');
+    const searchInput = document.getElementById('search');
+    const fJr = document.getElementById('f-jr');
+    const fMd = document.getElementById('f-md');
+    const fAdv = document.getElementById('f-adv');
+
+    function createTopic(topic){
+      const wrap = document.createElement('div');
+      wrap.className = 'topic';
+      wrap.dataset.id = topic.id;
+
+      const hdr = document.createElement('div');
+      hdr.className = 'topic-hdr';
+      hdr.innerHTML = `<div class="topic-title">${topic.title}</div>
+        <button class="small-btn" data-action="toggle-topic">Thu gọn/Mở rộng</button>`;
+      wrap.appendChild(hdr);
+
+      const body = document.createElement('div');
+      body.className = 'topic-body';
+
+      topic.items.forEach((it)=>{
+        const q = document.createElement('div');
+        q.className = 'q show';
+        q.dataset.level = it.lvl;
+        q.dataset.text = `${it.q} ${it.a}`.toLowerCase();
+
+        const tags = document.createElement('div');
+        tags.className = 'tags';
+        const tLevel = document.createElement('span');
+        let lvlClass = it.lvl==='jr'?'lvl-jr':(it.lvl==='md'?'lvl-md':'lvl-adv');
+        tLevel.className = `tag ${lvlClass}`;
+        tLevel.textContent = it.lvl==='jr' ? 'Junior' : (it.lvl==='md' ? 'Middle' : 'Advanced');
+        tags.appendChild(tLevel);
+
+        const qhdr = document.createElement('div');
+        qhdr.className = 'q-hdr';
+
+        const title = document.createElement('div');
+        title.className = 'q-title';
+        title.textContent = it.q;
+
+        const actions = document.createElement('div');
+        actions.className = 'q-actions';
+
+        const btnShow = document.createElement('button');
+        btnShow.className = 'small-btn';
+        btnShow.textContent = 'Ẩn gợi ý';
+        btnShow.addEventListener('click', ()=>{
+          q.classList.toggle('show');
+          btnShow.textContent = q.classList.contains('show') ? 'Ẩn gợi ý' : 'Gợi ý trả lời';
+        });
+
+        const btnCopy = document.createElement('button');
+        btnCopy.className = 'small-btn';
+        btnCopy.textContent = 'Copy câu hỏi';
+        btnCopy.addEventListener('click', async ()=>{
+          try{
+            await navigator.clipboard.writeText(it.q);
+            btnCopy.textContent = 'Đã copy!';
+            setTimeout(()=> btnCopy.textContent = 'Copy câu hỏi', 1200);
+          }catch(e){
+            btnCopy.textContent = 'Lỗi copy';
+            setTimeout(()=> btnCopy.textContent = 'Copy câu hỏi', 1200);
+          }
+        });
+
+        actions.appendChild(btnShow);
+        actions.appendChild(btnCopy);
+
+        const left = document.createElement('div');
+        left.style.display = 'grid';
+        left.style.gap = '6px';
+        left.appendChild(title);
+        left.appendChild(tags);
+
+        qhdr.appendChild(left);
+        qhdr.appendChild(actions);
+
+        const ans = document.createElement('div');
+        ans.className = 'a';
+        ans.innerHTML = `<div class="ex"><pre style="white-space:pre-wrap;margin:0">${it.a.trim()}</pre></div>`;
+
+        q.appendChild(qhdr);
+        q.appendChild(ans);
+        body.appendChild(q);
+      });
+
+      wrap.appendChild(body);
+
+      wrap.querySelector('[data-action="toggle-topic"]').addEventListener('click', ()=>{
+        body.style.display = body.style.display === 'none' ? 'grid' : 'none';
+      });
+
+      return wrap;
+    }
+
+    function render(){
+      container.innerHTML = '';
+      const activeTopics = Array.from(document.querySelectorAll('.f-topic')).filter(c=>c.checked).map(c=>c.dataset.topic);
+      const txt = searchInput.value.trim().toLowerCase();
+      const showJr = fJr.checked;
+      const showMd = fMd.checked;
+      const showAdv = fAdv.checked;
+
+      DATA.forEach(topic=>{
+        if(activeTopics.length && !activeTopics.includes(topic.id)) return;
+        const tEl = createTopic(topic);
+        const items = Array.from(tEl.querySelectorAll('.q'));
+        let any = 0;
+        items.forEach(el=>{
+          const lvl = el.dataset.level;
+          const matchLvl = (lvl==='jr' && showJr) || (lvl==='md' && showMd) || (lvl==='adv' && showAdv);
+          const matchText = !txt || el.dataset.text.includes(txt);
+          el.style.display = (matchLvl && matchText) ? 'block' : 'none';
+          if(el.style.display!=='none') any++;
+        });
+        if(any>0) container.appendChild(tEl);
+      });
+
+      if(!container.children.length){
+        const empty = document.createElement('div');
+        empty.className = 'panel';
+        empty.style.padding = '16px';
+        empty.textContent = 'Không có câu hỏi nào khớp bộ lọc hiện tại.';
+        container.appendChild(empty);
+      }
+    }
+
+    document.querySelectorAll('.f-topic').forEach(c=> c.addEventListener('change', render));
+    document.getElementById('clear').addEventListener('click', ()=>{
+      searchInput.value = '';
+      fJr.checked = true; fMd.checked = true; fAdv.checked = true;
+      document.querySelectorAll('.f-topic').forEach(c=> c.checked = true);
+      render();
+    });
+
+    searchInput.addEventListener('input', render);
+    [fJr,fMd,fAdv].forEach(c=> c.addEventListener('change', render));
+
+    render();
+  </script>
+</body>
+</html>

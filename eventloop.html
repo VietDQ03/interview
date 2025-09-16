@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Node.js Event Loop Visualizer</title>
+  <style>
+    :root{
+      --bg:#0b1020;
+      --panel:#121832;
+      --panel-2:#0f1530;
+      --text:#e6ebff;
+      --muted:#a9b3d1;
+      --accent:#7aa2ff;
+      --ok:#3ddc97;
+      --warn:#ffd166;
+      --err:#ff6b6b;
+      --grid: rgba(255,255,255,0.05);
+      --shadow: 0 10px 30px rgba(0,0,0,.35);
+      --radius:14px;
+      --chip:#1b2347;
+      --chip-border:#2a376b;
+    }
+    *{ box-sizing:border-box }
+    html,body{
+      height:100%;
+      margin:0;
+      background:
+        radial-gradient(1200px 800px at 80% -10%, #1a245a 0%, #0b1020 50%, #0b1020 100%),
+        var(--bg);
+      color:var(--text);
+      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+    }
+    header{
+      text-align:center;
+      padding:18px 12px 6px;
+    }
+    h1{ font-size: clamp(18px,4vw,28px); margin:0 0 6px 0; }
+    .subtitle{ color:var(--muted); font-size:clamp(12px,2.5vw,14px); }
+
+    .wrap{
+      max-width:1100px;
+      margin:0 auto;
+      padding:12px;
+    }
+
+    .panel{
+      background: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02));
+      border:1px solid rgba(255,255,255,0.12);
+      border-radius:12px;
+      box-shadow: var(--shadow);
+    }
+
+    .grid{
+      display:grid;
+      gap:12px;
+    }
+
+    .controls{
+      margin-top:10px;
+      padding:10px;
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px;
+      align-items:center;
+    }
+    .btn{
+      background:var(--accent);
+      color:#0b1020;
+      border:0;
+      padding:10px 12px;
+      border-radius:10px;
+      font-weight:700;
+      cursor:pointer;
+    }
+    .btn:disabled{ opacity:.5; cursor:not-allowed; }
+
+    .chips{ display:flex; flex-wrap:wrap; gap:8px; }
+    .chip{
+      background: var(--chip);
+      border:1px solid var(--chip-border);
+      color:var(--text);
+      padding:8px 10px;
+      border-radius:10px;
+      font-size:12px;
+      display:flex; align-items:center; gap:8px;
+      cursor:pointer; user-select:none;
+    }
+    .chip input{ accent-color:var(--accent); }
+
+    .stage{
+      padding:12px;
+    }
+
+    .lanes{
+      display:grid;
+      gap:10px;
+      padding:12px;
+    }
+    .lane{
+      display:grid;
+      grid-template-columns: 120px 1fr;
+      gap:10px;
+      align-items:start;
+    }
+    .lane-name{
+      font-size:12px; color:var(--muted);
+      padding-top:6px;
+    }
+    .flow{
+      display:flex; gap:10px;
+      overflow-x:auto; padding-bottom:6px;
+      scroll-snap-type:x proximity;
+    }
+    .flow::-webkit-scrollbar{ height:10px }
+    .flow::-webkit-scrollbar-thumb{
+      background: rgba(255,255,255,0.15);
+      border-radius:10px;
+    }
+
+    .card{
+      min-width:200px;
+      background: linear-gradient(180deg, rgba(20,26,60,.9), rgba(14,20,45,.9));
+      border:1px solid rgba(255,255,255,0.12);
+      border-radius:12px;
+      padding:10px;
+      position:relative;
+      scroll-snap-align:start;
+    }
+    .card .title{ font-weight:700; font-size:13px; margin-bottom:6px; }
+    .card .desc{ font-size:12px; color:var(--muted); line-height:1.4; }
+
+    .queue{
+      display:flex; gap:8px; flex-wrap:wrap; margin-top:8px;
+    }
+    .qitem{
+      background: rgba(122,162,255,.12);
+      border:1px solid rgba(122,162,255,.35);
+      color:var(--text);
+      padding:4px 8px;
+      border-radius:8px;
+      font-size:11px;
+    }
+
+    .log{
+      margin-top:12px; padding:10px; background:var(--panel-2);
+      border-top:1px solid rgba(255,255,255,0.12);
+      border-bottom-left-radius:12px; border-bottom-right-radius:12px;
+      max-height:220px; overflow:auto; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size:12px; line-height:1.5;
+      white-space:pre-wrap;
+    }
+
+    .explain{
+      margin-top:14px; padding:12px;
+      display:grid; gap:10px;
+    }
+    .ex-block{
+      background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02));
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 12px;
+      padding: 12px;
+    }
+    .ex-title{
+      font-weight:700; font-size:14px; margin-bottom:6px;
+    }
+    .ex-text{ color:var(--muted); font-size:13px; line-height:1.55; }
+
+    @media (max-width: 700px){
+      .lane{ grid-template-columns: 1fr; }
+      .lane-name{ padding-top:0 }
+      .card{ min-width:220px }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Node.js Event Loop Visualizer</h1>
+    <div class="subtitle">Minh họa các pha: Timers → Pending → Poll → Check → Close + Microtasks (process.nextTick, Promise)</div>
+  </header>
+
+  <div class="wrap grid">
+    <div class="panel">
+      <div class="controls">
+        <button id="run" class="btn">Run Demo</button>
+        <button id="clear" class="btn" style="background:#3ddc97;color:#07121f">Clear Log</button>
+        <label class="chip"><input id="chk-micro" type="checkbox" checked /> Microtasks (nextTick + Promise)</label>
+        <label class="chip"><input id="chk-io" type="checkbox" checked /> Giả lập I/O callback</label>
+        <label class="chip"><input id="chk-t10" type="checkbox" /> setTimeout(10ms)</label>
+      </div>
+
+      <div class="stage">
+        <div class="lanes">
+          <div class="lane">
+            <div class="lane-name">Microtasks</div>
+            <div class="flow" id="lane-micro">
+              <div class="card">
+                <div class="title">process.nextTick</div>
+                <div class="desc">Ưu tiên cao nhất, chạy trước Promise microtasks sau mỗi callback/pha.</div>
+              </div>
+              <div class="card">
+                <div class="title">Promise.then/catch</div>
+                <div class="desc">Chạy sau nextTick trong cùng “điểm dừng”.</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="lane">
+            <div class="lane-name">Macrotasks (Phases)</div>
+            <div class="flow" id="lane-phases">
+              <div class="card">
+                <div class="title">1) Timers</div>
+                <div class="desc">Chạy setTimeout/setInterval đã đến hạn.</div>
+                <div class="queue" id="q-timers"></div>
+              </div>
+              <div class="card">
+                <div class="title">2) Pending callbacks</div>
+                <div class="desc">I/O callbacks bị hoãn ở vòng trước.</div>
+                <div class="queue" id="q-pending"></div>
+              </div>
+              <div class="card">
+                <div class="title">3) Poll</div>
+                <div class="desc">Nhận và xử lý I/O mới; có thể chờ nếu không có timers sắp đến hạn.</div>
+                <div class="queue" id="q-poll"></div>
+              </div>
+              <div class="card">
+                <div class="title">4) Check</div>
+                <div class="desc">Chạy setImmediate callbacks.</div>
+                <div class="queue" id="q-check"></div>
+              </div>
+              <div class="card">
+                <div class="title">5) Close callbacks</div>
+                <div class="desc">Xử lý đóng tài nguyên (e.g., 'close').</div>
+                <div class="queue" id="q-close"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div id="log" class="log panel" aria-live="polite"></div>
+      </div>
+    </div>
+
+    <div class="panel explain">
+      <div class="ex-block">
+        <div class="ex-title">Tổng quan</div>
+        <div class="ex-text">
+          Event Loop điều phối callback non-blocking trên main thread JS, phối hợp libuv và thread pool cho I/O/CPU-bound tasks.
+          Mỗi “tick” đi qua các pha Timers → Pending → Poll → Check → Close; microtasks (nextTick, Promise) được xử lý giữa/ sau các callback với ưu tiên nextTick > Promise.
+        </div>
+      </div>
+      <div class="ex-block">
+        <div class="ex-title">Microtasks vs Macrotasks</div>
+        <div class="ex-text">
+          - process.nextTick: chạy ngay sau callback hiện tại, trước mọi microtask khác, có thể gây starvation nếu lạm dụng.<br/>
+          - Promise microtasks: then/catch/finally chạy sau nextTick, trước khi quay lại các pha tiếp theo.<br/>
+          - Macrotasks: timers, I/O, setImmediate… được xếp vào các pha tương ứng.
+        </div>
+      </div>
+      <div class="ex-block">
+        <div class="ex-title">setTimeout(0) vs setImmediate</div>
+        <div class="ex-text">
+          - setImmediate chạy ở Check phase, thường thực thi trước setTimeout(0) khi được lên lịch từ I/O callback.<br/>
+          - setTimeout(0) phụ thuộc Timers phase của tick sau, nên không đảm bảo “ngay lập tức”.
+        </div>
+      </div>
+      <div class="ex-block">
+        <div class="ex-title">Thread pool và I/O</div>
+        <div class="ex-text">
+          Một số API (fs, crypto, dns.lookup) chạy trong threadpool (UV_THREADPOOL_SIZE có thể cấu hình). Khi xong, callback được đưa vào hàng đợi tương ứng và event loop sẽ thực thi trên main thread.
+        </div>
+      </div>
+      <div class="ex-block">
+        <div class="ex-title">Best practices</div>
+        <div class="ex-text">
+          Tránh tác vụ sync nặng, chia nhỏ công việc; dùng setImmediate hoặc await để giải phóng loop; cẩn trọng với nextTick để tránh chặn microtasks khác.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const logEl = document.getElementById('log');
+    const btnRun = document.getElementById('run');
+    const btnClear = document.getElementById('clear');
+    const chkMicro = document.getElementById('chk-micro');
+    const chkIO = document.getElementById('chk-io');
+    const chkT10 = document.getElementById('chk-t10');
+
+    const qTimers = document.getElementById('q-timers');
+    const qPending = document.getElementById('q-pending');
+    const qPoll = document.getElementById('q-poll');
+    const qCheck = document.getElementById('q-check');
+    const qClose = document.getElementById('q-close');
+
+    function log(msg){
+      const t = new Date().toLocaleTimeString();
+      logEl.textContent += `[${t}] ${msg}\n`;
+      logEl.scrollTop = logEl.scrollHeight;
+    }
+    function tag(q, label){
+      const el = document.createElement('span');
+      el.className = 'qitem';
+      el.textContent = label;
+      q.appendChild(el);
+      return el;
+    }
+    function clearQueues(){
+      [qTimers,qPending,qPoll,qCheck,qClose].forEach(q=>q.innerHTML='');
+    }
+    btnClear.addEventListener('click', ()=>{
+      logEl.textContent = '';
+      clearQueues();
+    });
+
+    // Mô phỏng: không thể tái tạo chính xác loop của Node trong trình duyệt,
+    // nhưng ta minh họa thứ tự tương đối giữa timers, immediate và microtasks.
+    function runDemo(){
+      btnRun.disabled = true;
+      log('--- Start demo ---');
+      clearQueues();
+
+      // Timers
+      tag(qTimers, 'setTimeout(0)');
+      setTimeout(()=>{
+        log('Timers: setTimeout(0) fired');
+        if(chkMicro.checked){
+          queueMicrotasks('t0');
+        }
+      }, 0);
+
+      if(chkT10.checked){
+        tag(qTimers, 'setTimeout(10ms)');
+        setTimeout(()=>{
+          log('Timers: setTimeout(10) fired');
+          if(chkMicro.checked){
+            queueMicrotasks('t10');
+          }
+        }, 10);
+      }
+
+      // Check (setImmediate) — trong trình duyệt dùng setImmediate nếu có, fallback to messageChannel
+      tag(qCheck, 'setImmediate');
+      scheduleImmediate(()=>{
+        log('Check: setImmediate fired');
+        if(chkMicro.checked){
+          queueMicrotasks('immediate');
+        }
+      });
+
+      // Poll / I/O giả lập
+      if(chkIO.checked){
+        tag(qPoll, 'I/O callback');
+        simulateIO(()=>{
+          log('Poll: I/O callback fired');
+          if(chkMicro.checked){
+            queueMicrotasks('io');
+          }
+          // Thử lên lịch thêm immediate vs timeout trong I/O callback để thấy khác biệt
+          tag(qCheck, 'setImmediate (from I/O)');
+          scheduleImmediate(()=> log('Check: setImmediate (from I/O) fired'));
+          tag(qTimers, 'setTimeout(0) (from I/O)');
+          setTimeout(()=> log('Timers: setTimeout(0) (from I/O) fired'), 0);
+        });
+      }
+
+      // Một Promise microtask ngay lập tức
+      if(chkMicro.checked){
+        queueMicrotasks('start');
+      }
+
+      // Kết thúc
+      setTimeout(()=>{
+        log('--- End (wait a bit for late timers/immediates) ---');
+        btnRun.disabled = false;
+      }, 80);
+    }
+
+    function queueMicrotasks(label){
+      // process.nextTick analog: dùng queueMicrotask trước Promise để ưu tiên mô phỏng
+      // Trong Node, nextTick chạy trước promise microtasks.
+      queueMicrotask(()=> log(`microtask(nextTick-ish): before ${label}`));
+      Promise.resolve().then(()=> log(`microtask(Promise): after ${label}`));
+    }
+
+    // setImmediate polyfill: ưu tiên MessageChannel, rồi setTimeout(0)
+    const scheduleImmediate = (function(){
+      if (typeof setImmediate === 'function') return setImmediate;
+      if (typeof MessageChannel !== 'undefined'){
+        const ch = new MessageChannel();
+        const queue = [];
+        ch.port1.onmessage = ()=> {
+          const fn = queue.shift();
+          fn && fn();
+        };
+        return (fn)=>{ queue.push(fn); ch.port2.postMessage(0); };
+      }
+      return (fn)=> setTimeout(fn, 0);
+    })();
+
+    // Giả lập I/O: dùng setTimeout để mô phỏng callback I/O về poll phase
+    function simulateIO(cb){
+      setTimeout(cb, 5);
+    }
+
+    btnRun.addEventListener('click', runDemo);
+  </script>
+</body>
+</html>

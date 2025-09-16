@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>NestJS Route Lifecycle Diagram</title>
+  <style>
+    :root{
+      --bg:#0b1020;
+      --panel:#121832;
+      --panel-2:#0f1530;
+      --text:#e6ebff;
+      --muted:#a9b3d1;
+      --accent:#7aa2ff;
+      --ok:#3ddc97;
+      --warn:#ffd166;
+      --err:#ff6b6b;
+      --mid:#9b5de5;
+      --cyan:#4dd0e1;
+      --grid: rgba(255,255,255,0.04);
+      --chip:#1b2347;
+      --chip-border:#2a376b;
+      --shadow: 0 10px 30px rgba(0,0,0,.35);
+      --radius:14px;
+    }
+
+    * { box-sizing: border-box; }
+    html, body {
+      height: 100%;
+      background: radial-gradient(1200px 800px at 80% -10%, #1a245a 0%, #0b1020 50%, #0b1020 100%), var(--bg);
+      color: var(--text);
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji","Segoe UI Emoji";
+      margin: 0;
+    }
+
+    header{
+      padding: 18px 16px 0 16px;
+      text-align: center;
+    }
+    h1{
+      font-size: clamp(18px, 4vw, 28px);
+      margin: 0 0 6px 0;
+      letter-spacing: 0.3px;
+    }
+    .subtitle{
+      color: var(--muted);
+      font-size: clamp(12px, 2.6vw, 14px);
+      margin-bottom: 10px;
+    }
+
+    .wrap{
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 12px;
+    }
+
+    .controls{
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .control-panel{
+      background: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02));
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 12px;
+      padding: 10px;
+      box-shadow: var(--shadow);
+    }
+
+    .toggles{
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    .chip{
+      background: var(--chip);
+      border: 1px solid var(--chip-border);
+      color: var(--text);
+      padding: 8px 10px;
+      border-radius: 10px;
+      font-size: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      user-select: none;
+    }
+    .chip input{
+      accent-color: var(--accent);
+    }
+    .legend{
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 8px;
+    }
+    .legend .tag{
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 8px;
+      border-radius: 999px;
+      font-size: 11px;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.12);
+      color: var(--muted);
+    }
+    .swatch{
+      width: 10px; height: 10px; border-radius: 2px;
+      display: inline-block;
+    }
+
+    .canvas{
+      background:
+        linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01)),
+        repeating-linear-gradient(0deg, transparent 0 22px, var(--grid) 22px 23px),
+        repeating-linear-gradient(90deg, transparent 0 22px, var(--grid) 22px 23px),
+        var(--panel);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: var(--radius);
+      padding: 16px;
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    /* Timeline */
+    .timeline{
+      position: relative;
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 16px;
+    }
+
+    .lane{
+      display: grid;
+      grid-template-columns: 100%;
+      gap: 10px;
+    }
+
+    .lane-title{
+      font-size: 12px;
+      color: var(--muted);
+      letter-spacing: .3px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-left: 2px;
+    }
+    .lane-title .dot{
+      width: 8px; height: 8px; border-radius: 50%;
+      display: inline-block;
+    }
+
+    .flow{
+      display: grid;
+      grid-template-columns: repeat(9, minmax(220px, 1fr));
+      gap: 14px;
+      overflow-x: auto;
+      padding-bottom: 6px;
+      scroll-snap-type: x mandatory;
+    }
+    .flow::-webkit-scrollbar{
+      height: 10px;
+    }
+    .flow::-webkit-scrollbar-thumb{
+      background: rgba(255,255,255,0.15);
+      border-radius: 10px;
+    }
+
+    .node{
+      min-width: 220px;
+      background: linear-gradient(180deg, rgba(20,26,60,.9), rgba(14,20,45,.9));
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 12px;
+      padding: 10px;
+      position: relative;
+      scroll-snap-align: start;
+      transition: transform .2s ease;
+    }
+    .node:hover{ transform: translateY(-2px); }
+
+    .node .hdr{
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+      margin-bottom: 8px;
+    }
+    .node .title{
+      font-weight: 600;
+      font-size: 13px;
+      letter-spacing: .2px;
+    }
+    .pill{
+      font-size: 10px;
+      padding: 3px 6px;
+      border-radius: 999px;
+      color: #0b1020;
+      background: var(--accent);
+      border: 1px solid rgba(0,0,0,.2);
+    }
+    .node .desc{
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.35;
+    }
+
+    .meta{
+      display: flex;
+      gap: 6px;
+      margin-top: 8px;
+      flex-wrap: wrap;
+    }
+    .meta .m{
+      font-size: 10px;
+      padding: 3px 6px;
+      border-radius: 6px;
+      border: 1px solid rgba(255,255,255,0.14);
+      color: var(--text);
+      background: rgba(255,255,255,0.06);
+    }
+
+    .arrow{
+      position: absolute;
+      top: 50%;
+      right: -8px;
+      width: 16px;
+      height: 2px;
+      background: linear-gradient(90deg, rgba(122,162,255,0.0), rgba(122,162,255,0.9));
+      transform: translateY(-50%);
+      pointer-events: none;
+    }
+
+    /* Scope highlighting */
+    .scope-global .node{ outline: 1px dashed rgba(122,162,255,.5); }
+    .scope-controller .node[data-scope~="controller"]{ outline: 1px dashed rgba(61,220,151,.5); }
+    .scope-route .node[data-scope~="route"]{ outline: 1px dashed rgba(255,209,102,.5); }
+
+    /* Collapsible detail */
+    .details{
+      margin-top: 12px;
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 10px;
+    }
+    details{
+      background: var(--panel-2);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 12px;
+      padding: 10px 12px;
+    }
+    summary{
+      cursor: pointer;
+      font-weight: 600;
+      color: var(--text);
+      outline: none;
+    }
+    summary::-webkit-details-marker { display:none; }
+    .note{
+      color: var(--muted);
+      font-size: 13px;
+      margin-top: 8px;
+      line-height: 1.5;
+    }
+
+    /* Explanations section */
+    .explain{
+      margin-top: 14px;
+      display: grid;
+      gap: 10px;
+    }
+    .ex-block{
+      background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02));
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 12px;
+      padding: 12px;
+    }
+    .ex-title{
+      font-weight: 700;
+      font-size: 14px;
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .ex-title .badge{
+      font-size: 10px;
+      padding: 3px 6px;
+      border-radius: 999px;
+      color: #0b1020;
+      background: var(--accent);
+      border: 1px solid rgba(0,0,0,.2);
+    }
+    .ex-text{
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.55;
+    }
+
+    /* Mobile tweaks */
+    @media (max-width: 640px){
+      .node{ min-width: 240px; }
+      .legend{ gap: 6px; }
+      .chip{ font-size: 11px; padding: 7px 9px; }
+      .meta .m{ font-size: 9px; }
+      .ex-text{ font-size: 13px; }
+    }
+
+    /* Status ribbons (for emphasis) */
+    .ribbon{
+      position: absolute;
+      top: 10px;
+      right: -8px;
+      transform: rotate(2deg);
+      font-size: 10px;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.15);
+      padding: 2px 6px;
+      border-radius: 6px;
+      color: var(--muted);
+    }
+
+    /* Color tags */
+    .g{ background: rgba(122,162,255,.15); border-color: rgba(122,162,255,.35); }
+    .c{ background: rgba(61,220,151,.15); border-color: rgba(61,220,151,.35); }
+    .r{ background: rgba(255,209,102,.15); border-color: rgba(255,209,102,.45); }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Sơ đồ vòng đời một Route trong NestJS</h1>
+    <div class="subtitle">Pipeline xử lý một HTTP request: từ Middleware → Guards → Interceptors → Pipes → Handler → Interceptors → Exception Filters → Response</div>
+  </header>
+
+  <div class="wrap">
+    <div class="controls control-panel">
+      <div class="toggles">
+        <label class="chip">
+          <input id="t-global" type="checkbox" checked />
+          Global scope
+        </label>
+        <label class="chip">
+          <input id="t-controller" type="checkbox" checked />
+          Controller scope
+        </label>
+        <label class="chip">
+          <input id="t-route" type="checkbox" checked />
+          Route scope
+        </label>
+        <label class="chip" title="Hiển thị mũi tên luồng">
+          <input id="t-arrows" type="checkbox" checked />
+          Arrows
+        </label>
+        <label class="chip" title="Nền tương phản">
+          <input id="t-contrast" type="checkbox" />
+          High contrast
+        </label>
+      </div>
+      <div class="legend">
+        <span class="tag"><span class="swatch" style="background:#7aa2ff"></span> Global</span>
+        <span class="tag"><span class="swatch" style="background:#3ddc97"></span> Controller</span>
+        <span class="tag"><span class="swatch" style="background:#ffd166"></span> Route</span>
+        <span class="tag"><span class="swatch" style="background:#9b5de5"></span> Xử lý trước/sau</span>
+        <span class="tag"><span class="swatch" style="background:#ff6b6b"></span> Exception</span>
+      </div>
+    </div>
+
+    <div id="canvas" class="canvas scope-global scope-controller scope-route">
+      <div class="timeline">
+
+        <div class="lane">
+          <div class="lane-title"><span class="dot" style="background:#7aa2ff"></span>Global</div>
+          <div class="flow">
+            <div class="node g" data-scope="global">
+              <div class="hdr">
+                <div class="title">1) Middleware</div>
+                <span class="pill">app.use()</span>
+              </div>
+              <div class="desc">Tiền xử lý request (logging, CORS, body parser, rate limit...). next() để đi tiếp; có thể kết thúc response tại đây.</div>
+              <div class="meta">
+                <span class="m">Global</span>
+                <span class="m">Áp dụng theo path</span>
+              </div>
+              <div class="arrow"></div>
+            </div>
+
+            <div class="node g" data-scope="global">
+              <div class="hdr">
+                <div class="title">2) Guards</div>
+                <span class="pill">@UseGuards</span>
+              </div>
+              <div class="desc">Quyết định cho phép vào route. Trả về false hoặc throw → chặn.</div>
+              <div class="meta">
+                <span class="m">Global → Controller → Route</span>
+                <span class="m">Auth, Roles</span>
+              </div>
+              <div class="arrow"></div>
+            </div>
+
+            <div class="node g" data-scope="global">
+              <div class="hdr">
+                <div class="title">3) Interceptors (trước)</div>
+                <span class="pill">around</span>
+              </div>
+              <div class="desc">Bọc quanh handler: logging, cache lookup, thêm metadata. Chạy trước khi gọi handler.</div>
+              <div class="meta">
+                <span class="m">map/catchError</span>
+                <span class="m">RxJS</span>
+              </div>
+              <div class="arrow"></div>
+              <div class="ribbon">Pre</div>
+            </div>
+
+            <div class="node c" data-scope="controller">
+              <div class="hdr">
+                <div class="title">4) Pipes</div>
+                <span class="pill">@UsePipes</span>
+              </div>
+              <div class="desc">Validate/transform body, params, query. Lỗi → BadRequestException.</div>
+              <div class="meta">
+                <span class="m">ValidationPipe</span>
+                <span class="m">ParseIntPipe</span>
+              </div>
+              <div class="arrow"></div>
+            </div>
+
+            <div class="node r" data-scope="route">
+              <div class="hdr">
+                <div class="title">5) Route Handler</div>
+                <span class="pill">@Get/@Post</span>
+              </div>
+              <div class="desc">Hàm controller. Trả về sync/Promise/Observable. Nếu dùng @Res() → tự xử lý response.</div>
+              <div class="meta">
+                <span class="m">@Body/@Param/@Query</span>
+                <span class="m">@Req/@Res</span>
+              </div>
+              <div class="arrow"></div>
+            </div>
+
+            <div class="node g" data-scope="global">
+              <div class="hdr">
+                <div class="title">6) Interceptors (sau)</div>
+                <span class="pill">transform</span>
+              </div>
+              <div class="desc">Map dữ liệu trả về, serialize, thêm header, cache store, logging thời gian.</div>
+              <div class="meta">
+                <span class="m">ClassSerializer</span>
+                <span class="m">Cache</span>
+              </div>
+              <div class="arrow"></div>
+              <div class="ribbon">Post</div>
+            </div>
+
+            <div class="node g" data-scope="global">
+              <div class="hdr">
+                <div class="title">7) Exception Filters</div>
+                <span class="pill">@UseFilters</span>
+              </div>
+              <div class="desc">Bắt và chuẩn hóa lỗi (HttpException...). Có thể set status code/body tùy biến.</div>
+              <div class="meta">
+                <span class="m">Global/Controller/Route</span>
+                <span class="m">AllExceptionsFilter</span>
+              </div>
+              <div class="arrow"></div>
+            </div>
+
+            <div class="node g" data-scope="global">
+              <div class="hdr">
+                <div class="title">8) Response mapping</div>
+                <span class="pill">auto</span>
+              </div>
+              <div class="desc">Nếu không dùng @Res(), Nest tự đặt status code, serialize JSON/stream và gửi phản hồi.</div>
+              <div class="meta">
+                <span class="m">@HttpCode/@Redirect</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="details">
+          <details open>
+            <summary>Thứ tự chi tiết & ghi chú quan trọng</summary>
+            <div class="note">
+              - Thứ tự ưu tiên theo phạm vi: Global → Controller → Route.<br/>
+              - Interceptor bọc quanh handler (trước và sau). Pipes áp dụng khi binding tham số cho handler.<br/>
+              - Dùng @Res() thì bỏ qua auto-serialization và nhiều xử lý mặc định; bạn phải tự kết thúc response.<br/>
+              - Scoped providers với scope REQUEST được tạo mỗi request; cân nhắc performance.<br/>
+              - Exception có thể phát sinh ở bất kỳ bước nào; filter phù hợp phạm vi sẽ bắt và chuyển thành response.
+            </div>
+          </details>
+          <details>
+            <summary>Ví dụ quick setup</summary>
+            <div class="note">
+              - Global pipes: app.useGlobalPipes(new ValidationPipe({ transform: true }));<br/>
+              - Global interceptors: app.useGlobalInterceptors(new ClassSerializerInterceptor(reflector));<br/>
+              - Global filters: app.useGlobalFilters(new AllExceptionsFilter());<br/>
+              - Guards theo thứ tự: Global → Controller → Route (ví dụ @UseGuards(AuthGuard, RolesGuard)).
+            </div>
+          </details>
+        </div>
+
+        <!-- BẮT ĐẦU: Giải thích chi tiết theo pipeline -->
+        <div class="explain">
+          <div class="ex-block">
+            <div class="ex-title"><span class="badge">1</span> Middleware</div>
+            <div class="ex-text">
+              - Chạy sớm nhất, trước khi Nest định tuyến tới controller.<br/>
+              - Dùng cho logging, CORS, rate limit, body parser, gắn req.requestId...<br/>
+              - Gọi next() để đi tiếp; nếu tự res.end()/res.send() → dừng pipeline.<br/>
+              - Khai báo global (app.use) hoặc theo path/module (Module.configure + forRoutes).
+            </div>
+          </div>
+
+          <div class="ex-block">
+            <div class="ex-title"><span class="badge">2</span> Guards</div>
+            <div class="ex-text">
+              - Quyết định có cho phép vào route (authorization/permission).<br/>
+              - CanActivate(context) → true/false hoặc throw. False/throw → chặn và vào Exception Filter.<br/>
+              - Thứ tự: Global → Controller → Route (guard “gần” route chạy sau, có quyền chặn cuối).
+            </div>
+          </div>
+
+          <div class="ex-block">
+            <div class="ex-title"><span class="badge">3</span> Interceptors (trước)</div>
+            <div class="ex-text">
+              - Interceptor bọc quanh handler; pha “trước” chạy trước khi thực thi handler.<br/>
+              - Dùng cho logging thời gian, thêm metadata, cache lookup, short-circuit nếu có cache hit.<br/>
+              - next.handle() trả về Observable để tiếp tục luồng xử lý.
+            </div>
+          </div>
+
+          <div class="ex-block">
+            <div class="ex-title"><span class="badge">4</span> Pipes</div>
+            <div class="ex-text">
+              - Áp dụng khi binding tham số cho handler (@Body, @Param, @Query...).<br/>
+              - Validate và transform input: ValidationPipe, ParseIntPipe, ParseUUIDPipe...<br/>
+              - Lỗi → BadRequestException (hoặc custom) và sẽ được Exception Filter xử lý.
+            </div>
+          </div>
+
+          <div class="ex-block">
+            <div class="ex-title"><span class="badge">5</span> Route Handler</div>
+            <div class="ex-text">
+              - Nơi xử lý nghiệp vụ chính, trả về sync/Promise/Observable.<br/>
+              - Nếu dùng @Res() native: tự set status/headers/body và phải kết thúc response; Nest bỏ qua auto-serialization/filters mặc định cho route này.
+            </div>
+          </div>
+
+          <div class="ex-block">
+            <div class="ex-title"><span class="badge">6</span> Interceptors (sau) – transform</div>
+            <div class="ex-text">
+              - Chạy trên giá trị trả về của handler (Observable).<br/>
+              - Map/serialize dữ liệu (ClassSerializer), gắn header, đo thời gian, ghi cache.<br/>
+              - Có thể bắt và chuyển đổi lỗi bằng catchError trong pipeline RxJS.
+            </div>
+          </div>
+
+          <div class="ex-block">
+            <div class="ex-title"><span class="badge">7</span> Exception Filters</div>
+            <div class="ex-text">
+              - Bắt các exception chưa xử lý từ mọi bước (Guards/Pipes/Interceptors/Handler).<br/>
+              - Chuẩn hóa thành HTTP response: status code + payload nhất quán.<br/>
+              - Phạm vi: Global, Controller, Route. Mặc định có BaseExceptionFilter cho HttpException.
+            </div>
+          </div>
+
+          <div class="ex-block">
+            <div class="ex-title"><span class="badge">8</span> Response mapping</div>
+            <div class="ex-text">
+              - Nếu không dùng @Res(): Nest tự set status (200/201...), tôn trọng @HttpCode/@Redirect, serialize JSON/Buffer/Stream và gửi về client.<br/>
+              - Thường kết hợp với Interceptors để định dạng payload cuối cùng.
+            </div>
+          </div>
+
+          <div class="ex-block">
+            <div class="ex-title"><span class="badge">Lưu ý</span> Thứ tự & phạm vi</div>
+            <div class="ex-text">
+              - Thứ tự tổng quát: Middleware → Guards → Interceptors (trước) → Pipes → Handler → Interceptors (sau/transform) → Exception Filters → Response mapping.<br/>
+              - Ưu tiên phạm vi: Global → Controller → Route.<br/>
+              - Interceptors bọc quanh handler; Pipes chỉ tác động tại thời điểm binding tham số.<br/>
+              - Dùng @Res() native thì nhớ tự kết thúc response và tự quản lý lỗi nếu cần.
+            </div>
+          </div>
+        </div>
+        <!-- KẾT THÚC: Giải thích chi tiết theo pipeline -->
+
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const canvas = document.getElementById('canvas');
+    const tGlobal = document.getElementById('t-global');
+    const tController = document.getElementById('t-controller');
+    const tRoute = document.getElementById('t-route');
+    const tArrows = document.getElementById('t-arrows');
+    const tContrast = document.getElementById('t-contrast');
+
+    function applyScopes(){
+      canvas.classList.toggle('scope-global', tGlobal.checked);
+      canvas.classList.toggle('scope-controller', tController.checked);
+      canvas.classList.toggle('scope-route', tRoute.checked);
+
+      document.querySelectorAll('.arrow').forEach(el=>{
+        el.style.display = tArrows.checked ? 'block' : 'none';
+      });
+
+      document.documentElement.style.setProperty('--panel', tContrast.checked ? '#0b1440' : '#121832');
+      document.documentElement.style.setProperty('--panel-2', tContrast.checked ? '#0a1036' : '#0f1530');
+      document.documentElement.style.setProperty('--grid', tContrast.checked ? 'rgba(255,255,255,0.08)' : 'rgba(255,255,255,0.04)');
+    }
+
+    [tGlobal, tController, tRoute, tArrows, tContrast].forEach(i=>{
+      i.addEventListener('change', applyScopes);
+    });
+    applyScopes();
+  </script>
+</body>
+</html>
