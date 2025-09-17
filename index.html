@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>INTERVIEW — Mục lục</title>
+  <title>INTERVIEW -- Mục lục</title>
   <meta name="color-scheme" content="dark light">
   <style>
     :root{
@@ -46,7 +46,6 @@
     .sm{background:transparent;border:1px solid var(--border);color:var(--text);padding:6px 10px;border-radius:999px;font-size:12px;cursor:pointer}
     .fav{color:#ffdd57;border-color:#ffdd57;background:rgba(255,221,87,.12)}
     .icon{width:18px;height:18px;opacity:.9}
-    /* Preview: phẳng, tràn đều, không đổ bóng */
     .preview{display:grid;grid-template-rows:auto 1fr;overflow:hidden}
     .p-hdr{padding:10px 12px;display:flex;align-items:center;gap:8px;justify-content:space-between;border-bottom:1px solid var(--border)}
     .p-title{font-weight:800}
@@ -63,7 +62,7 @@
   <div class="app">
     <header>
       <div>
-        <h1>INTERVIEW — Mục lục</h1>
+        <h1>INTERVIEW -- Mục lục</h1>
         <div class="hint">Mũi tên lên/xuống để chọn, Enter để xem trước. F để bật/tắt lọc “yêu thích”.</div>
       </div>
       <div class="top" style="min-width:280px">
@@ -117,6 +116,9 @@
       { id:'route',     file:'route.html',     title:'Routing',    tags:['http','api','spa'],            desc:'Thiết kế Routing/API, status codes, versioning' },
       { id:'threaded',  file:'threaded.html',  title:'Threaded',   tags:['concurrency','lock'],          desc:'Luồng, đồng bộ, race condition, deadlock' },
       { id:'typescript',file:'typescript.html',title:'TypeScript', tags:['types','generics','tsconfig'], desc:'TypeScript: typing nâng cao, utility types, patterns' },
+
+      // Mục mới: link sang tài liệu Frontend Junior chi tiết bạn vừa tạo
+      { id:'fe-junior', file:'junior-frontend.html', title:'Frontend — Junior (Chi tiết)', tags:['react','redux','router','axios','hooks','props'], desc:'Bộ câu hỏi/khái niệm React, Redux, Router, Axios, Hooks, Props — bản chi tiết có tìm kiếm & lọc' }
     ];
 
     const FAV_KEY = 'interview_favs';
@@ -141,6 +143,7 @@
       if(t.includes('type')) return `<svg class="icon" viewBox="0 0 24 24" fill="none"><path d="M4 6h16M9 6v12M15 6v12M4 18h16" stroke="${c}" stroke-width="2" stroke-linecap="round"/></svg>`;
       if(t.includes('route')) return `<svg class="icon" viewBox="0 0 24 24" fill="none"><path d="M6 6h6a5 5 0 0 1 0 10H8" stroke="${c}" stroke-width="2"/><circle cx="6" cy="6" r="2" fill="${c}"/><circle cx="8" cy="16" r="2" fill="${c}"/></svg>`;
       if(t.includes('thread')) return `<svg class="icon" viewBox="0 0 24 24" fill="none"><path d="M4 12h16M8 6l8 12M8 18l8-12" stroke="${c}" stroke-width="2"/></svg>`;
+      if(t.includes('frontend') || t.includes('react')) return `<svg class="icon" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="${c}" stroke-width="2"/><path d="M12 7v10M7 12h10" stroke="${c}" stroke-width="2" stroke-linecap="round"/></svg>`;
       return `<svg class="icon" viewBox="0 0 24 24" fill="none"><path d="M4 6h16M4 12h16M4 18h10" stroke="${c}" stroke-width="2" stroke-linecap="round"/></svg>`;
     }
 
@@ -247,7 +250,7 @@
 
     function loadPreview(p){
       currentPage = p;
-      previewTitle.textContent = `Xem trước — ${p.title} (${p.file})`;
+      previewTitle.textContent = `Xem trước -- ${p.title} (${p.file})`;
       iframe.src = p.file;
       openSameTabBtn.onclick = ()=> window.location.href = p.file;
       openNewTabBtn.onclick  = ()=> window.open(p.file, '_blank', 'noopener');
@@ -259,7 +262,7 @@
       history.replaceState(null, '', `#/${p.file}`);
     }
 
-    // Edge-to-edge: loại margin/padding của container preview để iframe chiếm toàn bộ
+    // Edge-to-edge
     edgeToggle.addEventListener('change', ()=>{
       const panel = document.querySelector('.panel.preview');
       if(edgeToggle.checked){

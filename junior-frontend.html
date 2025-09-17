@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Junior Frontend Interview -- Chi tiết: Props • Hooks • Redux • Router • Axios</title>
+  <meta name="color-scheme" content="dark light">
+  <style>
+    :root{
+      --bg:#0b1020; --panel:#0f1532; --panel-2:#0c1230;
+      --text:#e6ebff; --muted:#a9b3d1; --accent:#7aa2ff;
+      --ok:#3ddc97; --warn:#ffd166; --chip:#1b2347; --chip-b:#2a376b;
+      --border:rgba(127,140,255,.22);
+    }
+    @media (prefers-color-scheme: light){
+      :root{
+        --bg:#f6f8ff; --panel:#ffffff; --panel-2:#f5f7ff;
+        --text:#0b1020; --muted:#5a6585; --chip:#eef2ff; --chip-b:#d5defa;
+        --border:rgba(40,60,140,.16);
+      }
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%;margin:0;font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Arial;background:linear-gradient(180deg,var(--panel-2),var(--bg));color:var(--text)}
+    header{padding:18px 12px 8px;text-align:center}
+    h1{margin:0;font-size:clamp(18px,4vw,28px);letter-spacing:.2px}
+    .subtitle{color:var(--muted);font-size:12px;margin-top:6px}
+    .wrap{max-width:1100px;margin:0 auto;padding:12px;display:grid;gap:12px}
+    .panel{background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,.02));border:1px solid var(--border);border-radius:14px}
+    .controls{padding:12px;display:grid;gap:10px}
+    .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+    .search{flex:1 1 280px;display:flex;align-items:center;gap:8px;background:var(--panel-2);border:1px solid var(--border);border-radius:12px;padding:9px 10px}
+    .search input{border:0;outline:none;background:transparent;color:var(--text);width:100%}
+    .btn{background:var(--accent);color:#0b1020;border:0;padding:10px 12px;border-radius:10px;font-weight:700;cursor:pointer}
+    .ghost{background:transparent;border:1px solid var(--border);color:var(--text)}
+    .chip{background:var(--chip);border:1px solid var(--chip-b);color:var(--text);padding:7px 10px;border-radius:999px;font-size:12px;display:flex;gap:8px;align-items:center;cursor:pointer;user-select:none}
+    .chip input{accent-color:var(--accent)}
+    .grid{display:grid;gap:12px}
+    .topic{background:linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,.02));border:1px solid var(--border);border-radius:14px;overflow:hidden}
+    .topic-hdr{padding:12px;display:flex;align-items:center;justify-content:space-between}
+    .topic-title{font-weight:800;font-size:14px}
+    .topic-body{padding:12px;display:grid;gap:10px}
+    .q{border:1px solid var(--border);border-radius:12px;background:linear-gradient(180deg,rgba(255,255,255,.04),rgba(255,255,255,.02));padding:12px}
+    .q-hdr{display:flex;align-items:flex-start;justify-content:space-between;gap:8px}
+    .q-title{font-weight:800;font-size:14px;line-height:1.5}
+    .q-actions{display:flex;gap:6px;flex-wrap:wrap}
+    .small-btn{background:transparent;border:1px solid var(--border);color:var(--text);padding:6px 8px;border-radius:8px;font-size:12px;cursor:pointer}
+    .a{margin-top:10px;color:var(--text);font-size:13.5px;line-height:1.65;display:block}
+    .a pre{white-space:pre-wrap;margin:0}
+    .muted{color:var(--muted)}
+    .code{background:rgba(0,0,0,.25);border:1px solid var(--border);padding:10px;border-radius:10px;overflow:auto}
+    .li{margin-left:18px}
+    .footer{color:var(--muted);font-size:12px;text-align:center;padding:10px}
+    @media (max-width:720px){ .q-hdr{flex-direction:column;align-items:stretch} }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Junior Frontend Interview -- React/Redux/Router/Axios (Bản chi tiết)</h1>
+    <div class="subtitle">Tìm kiếm, lọc theo chủ đề, ẩn/hiện câu trả lời, copy nhanh Q&A</div>
+  </header>
+
+  <div class="wrap">
+    <div class="panel controls">
+      <div class="row">
+        <div class="search">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M21 21l-3.8-3.8M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15Z" stroke="#a9b3d1" stroke-width="2" stroke-linecap="round"/></svg>
+          <input id="search" type="text" placeholder="Tìm kiếm (ví dụ: controlled, deps effect, thunk, navigate, interceptor, memo)..." />
+        </div>
+        <button id="clear" class="btn" style="background:var(--ok);color:#062014">Xóa lọc</button>
+        <button id="toggleAll" class="btn ghost">Thu gọn tất cả</button>
+      </div>
+      <div class="row">
+        <label class="chip"><input type="checkbox" class="f-topic" data-topic="props" checked/> Props & Components</label>
+        <label class="chip"><input type="checkbox" class="f-topic" data-topic="hooks" checked/> Hooks</label>
+        <label class="chip"><input type="checkbox" class="f-topic" data-topic="redux" checked/> Redux</label>
+        <label class="chip"><input type="checkbox" class="f-topic" data-topic="router" checked/> Router</label>
+        <label class="chip"><input type="checkbox" class="f-topic" data-topic="axios" checked/> API/Axios</label>
+        <label class="chip"><input type="checkbox" class="f-topic" data-topic="perf" checked/> Performance</label>
+        <label class="chip"><input type="checkbox" class="f-topic" data-topic="test" checked/> Testing</label>
+        <label class="chip"><input type="checkbox" class="f-topic" data-topic="case" checked/> Tình huống</label>
+      </div>
+    </div>
+
+    <div id="container" class="grid"></div>
+
+    <div class="footer panel">
+      <div class="footer">
+        Mẹo: Trả lời theo khung 3 ý -- Khái niệm • Ví dụ • Lưu ý/Anti‑pattern. Ưu tiên đo lường thay vì tối ưu cảm tính.
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // helper: convert big string "q\nanswer" -> {q, a}
+    function toQA(block){
+      const [firstLine, ...rest] = block.split('\n');
+      const q = firstLine.trim();
+      const a = rest.join('\n').trim();
+      return { q, a };
+    }
+
+    const QA = {
+      props: {
+        title: 'Props & Components',
+        items: [
+`Khái niệm Props & Components (tổng quan)?
+- Component: khối UI có thể tái sử dụng, nhận đầu vào (props) và trả về cây UI.
+- Props: tham số cấu hình truyền từ cha → con; bất biến ở phía con.
+- Phân loại component:
+  • Presentational (UI thuần) vs Container (chứa logic, gọi API).
+  • Controlled vs Uncontrolled (đặc biệt với form).
+- Nguyên tắc: "Props down, events up"; single source of truth cho dữ liệu được chia sẻ.`,
+
+`Phân biệt props và state? Quy tắc dữ liệu chảy?
+Khái niệm:
+- Props: dữ liệu truyền từ cha xuống con (read-only ở con). Dùng để cấu hình component.
+- State: dữ liệu “sống” bên trong component, thay đổi bằng setState/useState → trigger render.
+Dòng chảy dữ liệu:
+- "Props down, events up": Cha → (props) → Con; Con → (callback prop) → Cha.
+Ví dụ:
+function Counter({ step=1 }) {
+  const [n, setN] = React.useState(0);
+  return <button onClick={()=>setN(n+step)}>+{step} = {n}</button>;
+}
+Lỗi thường gặp:
+- Thay đổi props trong con (không hiệu lực). Hãy derive state từ props cẩn thận (dùng useEffect khi prop đổi).
+- Gán state = props rồi không sync khi props đổi.
+Best practices:
+- Component nhận đủ dữ liệu qua props, hạn chế truy cập DOM trừ khi cần.`,
+
+`Controlled vs Uncontrolled component (form)?
+Khái niệm:
+- Controlled: value của input đến từ state; onChange cập nhật state → nguồn sự thật: state React.
+- Uncontrolled: dùng ref đọc value trực tiếp từ DOM (defaultValue), React không kiểm soát mỗi ký tự.
+Ví dụ controlled:
+const [email,setEmail]=useState('');
+<input value={email} onChange={e=>setEmail(e.target.value)} />
+Ví dụ uncontrolled:
+const ref=useRef(); <input defaultValue="a@b.com" ref={ref} />; ref.current.value
+So sánh:
+- Controlled: validate theo từng ký tự, dễ disable/format → nhiều render hơn.
+- Uncontrolled: code ngắn, ít render → khó validate phức tạp.
+Best practices:
+- Form thực sự → controlled hoặc dùng React Hook Form để tối ưu re-render.`,
+
+`Key trong list dùng để làm gì? Có dùng index không?
+Vai trò:
+- Key giúp React xác định item nào thay đổi/di chuyển → giữ đúng state con và DOM.
+Nguy cơ khi dùng index:
+- Thêm/xóa/reorder → index đổi → state/DOM gắn sai item (mất focus, animation lỗi).
+Giải pháp:
+- Dùng id ổn định từ dữ liệu. Chỉ dùng index nếu list tĩnh, không reorder, không thêm/xóa.`,
+
+`Lifting state up và khi nào dùng Context?
+Lifting:
+- Đưa state chung từ các component con lên cha chung để làm single source of truth.
+Context:
+- Tránh prop drilling cho dữ liệu toàn cục (theme, auth, i18n).
+Lưu ý:
+- Không dùng Context cho state thay đổi liên tục trên diện rộng (gây re-render). Tách context hoặc dùng selector/Redux.`,
+
+`Khi nào tách component? Quy tắc thiết kế props?
+Tách khi:
+- Khối UI tái dùng, có logic riêng, hoặc code dài/khó đọc.
+Thiết kế props:
+- Đặt tên hành vi: onSubmit(data) thay vì onClick.
+- Hạn chế boolean flag chồng chất; ưu tiên variant/size dạng literal types.
+- Viết PropTypes/TypeScript types.`
+        ].map(toQA)
+      },
+
+      hooks: {
+        title: 'Hooks',
+        items: [
+`Khái niệm Hooks (tổng quan)?
+- Hooks cho phép dùng state, lifecycle, context trong function components.
+- Hook thông dụng: useState, useEffect, useRef, useMemo, useCallback, useContext, useReducer.
+- Quy tắc:
+  • Chỉ gọi hook ở top-level (không trong if/loop).
+  • Chỉ gọi hook trong component hoặc custom hook bắt đầu bằng "use".
+- Mục tiêu: tái sử dụng logic (custom hooks) thay vì HOC/render props cũ.`,
+
+`useState, batching và cập nhật dựa trên giá trị trước?
+- React batch (gộp) setState trong cùng event loop → 1 lần render.
+- Dùng dạng callback khi phụ thuộc state trước: setX(prev => prev+1).`,
+
+`useEffect hoạt động thế nào? Cleanup? Khác useLayoutEffect?
+- useEffect chạy sau paint; trả về cleanup để hủy subscribe/timer.
+- useLayoutEffect chạy trước paint (đồng bộ) — dùng khi đo/điều chỉnh layout; tránh lạm dụng vì chặn render.`,
+
+`Quy tắc dependency array trong useEffect?
+- Liệt kê mọi biến/prop/hàm dùng trong effect (trừ hằng/ref).
+- Ổn định hàm/giá trị với useCallback/useMemo để tránh chạy lại không cần.
+- Tránh stale closure bằng cách khai báo deps đúng.`,
+
+`useMemo vs useCallback? Khi nào nên dùng?
+- useMemo: nhớ giá trị tính toán đắt.
+- useCallback: nhớ tham chiếu hàm để hỗ trợ React.memo.
+- Chỉ dùng khi có lợi ích rõ ràng.`,
+
+`Custom Hook là gì? Mẫu useDebounce/useFetch?
+- Hook bắt đầu bằng "use", gom logic tái sử dụng. Ví dụ useDebounce, useFetch với AbortController.`
+        ].map(toQA)
+      },
+
+      redux: {
+        title: 'Redux / State management',
+        items: [
+`Khái niệm Redux/State management (tổng quan)?
+- Redux cung cấp store trung tâm, state là bất biến, cập nhật thông qua action → reducer (pure).
+- Lợi ích: dự đoán được, DevTools, middleware cho side‑effects.
+- Hiện đại: Redux Toolkit (RTK) giảm boilerplate; RTK Query cho server-state caching.`,
+
+`Khi nào cần Redux thay vì local state/Context?
+- Khi chia sẻ state rộng, luồng phức tạp, cần devtools/middleware. App nhỏ có thể đủ với local state + context.`,
+
+`Redux Toolkit (RTK) giải quyết gì? Ví dụ slice + async.
+- createSlice, configureStore, createAsyncThunk; Immer giúp viết “mutating code” an toàn.`,
+
+`Data flow Redux và tính bất biến?
+- UI dispatch → reducer pure → state mới → UI subscribe. Không gọi API trong reducer.`,
+
+`Selector, memo hóa bằng Reselect?
+- createSelector memo hóa tính toán, tránh re-render thừa.`,
+
+`Thunk vs Saga?
+- Thunk đơn giản cho async; Saga cho workflow phức tạp (race/cancel). Junior nên bắt đầu với RTK + createAsyncThunk/RTK Query.`
+        ].map(toQA)
+      },
+
+      router: {
+        title: 'React Router',
+        items: [
+`Khái niệm Router (tổng quan)?
+- SPA Router ánh xạ URL → component mà không reload trang, dùng History API.
+- Tính năng: nested routes, params, search params, navigation, guards, code splitting.
+- Yêu cầu server: cấu hình fallback mọi đường dẫn về index.html.`,
+
+`SPA routing hoạt động thế nào? Cấu hình server?
+- Dùng pushState/replaceState để thay đổi URL; Router render component tương ứng.
+- Nginx: try_files $uri /index.html;`,
+
+`useParams, useSearchParams, useNavigate — ví dụ
+- Lấy :id, đọc/ghi query, điều hướng lập trình.`,
+
+`Nested routes và Outlet để tạo layout
+- Route cha làm layout; <Outlet/> hiển thị route con.`,
+
+`Guard route (RequireAuth) đơn giản
+- Nếu chưa đăng nhập: <Navigate to="/login" replace/>; nếu có: <Outlet/>.`,
+
+`Code splitting theo route (lazy) + Suspense
+- React.lazy + Suspense để giảm bundle ban đầu.`
+        ].map(toQA)
+      },
+
+      axios: {
+        title: 'API / Axios',
+        items: [
+`Khái niệm API client/Axios (tổng quan)?
+- Axios là HTTP client promise-based. Thực hành chuẩn:
+  • Tạo axios instance (baseURL, timeout).
+  • Interceptors gắn token/xử lý lỗi 401/refresh.
+  • Service layer (userApi, postApi) — UI không gọi axios trực tiếp.
+- Với server-state nhiều: cân nhắc RTK Query/TanStack Query để có cache/dedup/retry.`,
+
+`Thiết lập Axios instance + interceptors chuẩn
+- axios.create + request/response interceptors; tổ chức service layer.`,
+
+`Quản lý loading/error/cache. Khi nào dùng RTK Query?
+- Thủ công với useState/useEffect hoặc dùng RTK Query để có cache, invalidation, dedup.`,
+
+`Debounce + hủy request khi search
+- useDebounce + AbortController (axios hỗ trợ signal) để hủy request cũ.`,
+
+`Bảo mật khi call API từ FE
+- Ưu tiên httpOnly cookie cho token; chống CSRF (SameSite/CSRF token); không để secrets trên FE.`,
+
+`Phân trang & infinite scroll (cursor-based)
+- API trả nextCursor; FE merge theo id, handle empty/error.`
+        ].map(toQA)
+      },
+
+      perf: {
+        title: 'Performance cơ bản',
+        items: [
+`Khái niệm tối ưu hiệu năng React (tổng quan)?
+- Mục tiêu: giảm công việc render/tính toán không cần thiết và chặn UI.
+- Kỹ thuật chính: memo hóa (React.memo, useMemo, useCallback), virtualization list, code-splitting, debounce/throttle, tránh key sai, batching cập nhật.
+- Nguyên tắc: đo lường bằng Profiler/metrics trước khi tối ưu.`,
+
+`Khi nào dùng React.memo? Kết hợp với useCallback/useMemo
+- Dùng khi con nặng hoặc thường nhận props không đổi; ổn định props bằng memo.`,
+
+`Tránh re-render do literal mới mỗi lần
+- Memo hóa object/array/hàm truyền xuống con.`,
+
+`Virtualization cho danh sách dài
+- react-window/react-virtualized để render phần nhìn thấy.`,
+
+`Ảnh hưởng key sai
+- Key không ổn định gây mất state con/giật layout.`,
+
+`Sự kiện nặng và CPU-bound
+- Debounce/throttle; web worker cho tính toán nặng; batch cập nhật DOM.`
+        ].map(toQA)
+      },
+
+      test: {
+        title: 'Testing cơ bản',
+        items: [
+`Khái niệm testing FE (tổng quan)?
+- Mục tiêu: tin cậy khi refactor, bắt lỗi sớm.
+- Các lớp: unit (hàm/component nhỏ), integration (nhiều component + store/router), E2E (Cypress/Playwright).
+- Triết lý RTL: test hành vi người dùng, không test chi tiết triển khai.`,
+
+`React Testing Library — triết lý và ví dụ
+- render, userEvent, assert bằng vai trò/text. Tránh query theo class.`,
+
+`Mock API
+- MSW intercept network; hoặc axios-mock-adapter/jest.fn cho unit nhỏ.`,
+
+`Test form controlled
+- Gõ → validate → submit → assert payload, disabled lúc loading.`,
+
+`Snapshot test — khi nào?
+- Dùng cho component rất ổn định; tránh snapshot lớn/dễ nhiễu.`,
+
+`Coverage
+- Chỉ số tham khảo; tập trung case quan trọng và edge cases.`
+        ].map(toQA)
+      },
+
+      case: {
+        title: 'Tình huống thực tế',
+        items: [
+`Khái niệm tình huống (scenario) trong phỏng vấn?
+- Nhà tuyển dụng đánh giá cách bạn phân tích vấn đề, ưu tiên, giao tiếp, trade-off.
+- Khuôn trả lời: Nêu giả định → Xác định mục tiêu/KPI → Đề xuất giải pháp → Rủi ro/giảm thiểu → Kết luận.`,
+
+`Form login submit 2 lần?
+- Ngăn default, disable khi loading, chống double click, backend idempotent.`,
+
+`Giữ phiên người dùng sau reload?
+- httpOnly cookie/refresh token; hydrate /me khi app mount; xử lý 401.`,
+
+`Search gọi API liên tục?
+- Debounce 300–500ms; cancel request cũ; cache theo query.`,
+
+`Con re-render quá nhiều vì callback từ cha?
+- useCallback + React.memo; tách state xuống gần nơi dùng.`,
+
+`Mạng chập chờn?
+- Retry exponential backoff; thông báo thân thiện; queue offline nếu cần.`
+        ].map(toQA)
+      }
+    };
+
+    const SECTIONS = [
+      { id:'props',  title: QA.props.title,  items: QA.props.items },
+      { id:'hooks',  title: QA.hooks.title,  items: QA.hooks.items },
+      { id:'redux',  title: QA.redux.title,  items: QA.redux.items },
+      { id:'router', title: QA.router.title, items: QA.router.items },
+      { id:'axios',  title: QA.axios.title,  items: QA.axios.items },
+      { id:'perf',   title: QA.perf.title,   items: QA.perf.items },
+      { id:'test',   title: QA.test.title,   items: QA.test.items },
+      { id:'case',   title: QA.case.title,   items: QA.case.items }
+    ];
+
+    const container = document.getElementById('container');
+    const searchInput = document.getElementById('search');
+    const toggleAllBtn = document.getElementById('toggleAll');
+    const storeKey = 'jrfe_filters_detail';
+
+    function saveFilterState(){
+      const topics = Array.from(document.querySelectorAll('.f-topic')).map(c=>({id:c.dataset.topic,checked:c.checked}));
+      localStorage.setItem(storeKey, JSON.stringify({topics, search: searchInput.value}));
+    }
+    function restoreFilterState(){
+      const s = localStorage.getItem(storeKey);
+      if(!s) return;
+      try{
+        const {topics, search} = JSON.parse(s);
+        topics?.forEach(t=>{
+          const el = document.querySelector(`.f-topic[data-topic="${t.id}"]`);
+          if(el) el.checked = t.checked;
+        });
+        if(search) searchInput.value = search;
+      }catch{}
+    }
+
+    function createTopic(topic){
+      const wrap = document.createElement('div');
+      wrap.className = 'topic';
+      wrap.dataset.id = topic.id;
+
+      const hdr = document.createElement('div');
+      hdr.className = 'topic-hdr';
+      hdr.innerHTML = `<div class="topic-title">${topic.title}</div>
+                       <button class="small-btn" data-action="toggle-topic">Thu gọn/Mở rộng</button>`;
+      wrap.appendChild(hdr);
+
+      const body = document.createElement('div');
+      body.className = 'topic-body';
+
+      topic.items.forEach(it=>{
+        const q = document.createElement('div');
+        q.className = 'q';
+        q.dataset.text = `${it.q} ${it.a}`.toLowerCase();
+
+        const qhdr = document.createElement('div');
+        qhdr.className = 'q-hdr';
+
+        const title = document.createElement('div');
+        title.className = 'q-title';
+        title.textContent = it.q;
+
+        const actions = document.createElement('div');
+        actions.className = 'q-actions';
+
+        const btnToggle = document.createElement('button');
+        btnToggle.className = 'small-btn';
+        btnToggle.textContent = 'Ẩn/Hiện trả lời';
+
+        const btnCopyQ = document.createElement('button');
+        btnCopyQ.className = 'small-btn';
+        btnCopyQ.textContent = 'Copy câu hỏi';
+
+        const btnCopyQA = document.createElement('button');
+        btnCopyQA.className = 'small-btn';
+        btnCopyQA.textContent = 'Copy Q&A';
+
+        actions.appendChild(btnToggle);
+        actions.appendChild(btnCopyQ);
+        actions.appendChild(btnCopyQA);
+
+        const ans = document.createElement('div');
+        ans.className = 'a';
+        ans.innerHTML = `<div class="code"><pre>${it.a}</pre></div>`;
+
+        btnToggle.addEventListener('click', ()=>{ ans.style.display = ans.style.display === 'none' ? 'block' : 'none'; });
+        btnCopyQ.addEventListener('click', async ()=>{
+          try{ await navigator.clipboard.writeText(it.q); btnCopyQ.textContent='Đã copy!'; setTimeout(()=>btnCopyQ.textContent='Copy câu hỏi',1000);}catch{ btnCopyQ.textContent='Lỗi copy'; setTimeout(()=>btnCopyQ.textContent='Copy câu hỏi',1200);}
+        });
+        btnCopyQA.addEventListener('click', async ()=>{
+          const txt = `${it.q}\n\n${it.a}`;
+          try{ await navigator.clipboard.writeText(txt); btnCopyQA.textContent='Đã copy!'; setTimeout(()=>btnCopyQA.textContent='Copy Q&A',1000);}catch{ btnCopyQA.textContent='Lỗi copy'; setTimeout(()=>btnCopyQA.textContent='Copy Q&A',1200);}
+        });
+
+        qhdr.appendChild(title);
+        qhdr.appendChild(actions);
+        q.appendChild(qhdr);
+        q.appendChild(ans);
+        body.appendChild(q);
+      });
+
+      wrap.appendChild(body);
+      hdr.querySelector('[data-action="toggle-topic"]').addEventListener('click', ()=>{
+        body.style.display = body.style.display === 'none' ? 'grid' : 'none';
+      });
+      return wrap;
+    }
+
+    function render(){
+      container.innerHTML = '';
+      const activeTopics = Array.from(document.querySelectorAll('.f-topic')).filter(c=>c.checked).map(c=>c.dataset.topic);
+      const txt = searchInput.value.trim().toLowerCase();
+
+      SECTIONS.forEach(topic=>{
+        if(!activeTopics.includes(topic.id)) return;
+        const tEl = createTopic(topic);
+        const items = Array.from(tEl.querySelectorAll('.q'));
+        let any = 0;
+        items.forEach(el=>{
+          const matchText = !txt || el.dataset.text.includes(txt);
+          el.style.display = matchText ? 'block' : 'none';
+          if(matchText) any++;
+        });
+        if(any>0) container.appendChild(tEl);
+      });
+
+      if(!container.children.length){
+        const empty = document.createElement('div');
+        empty.className = 'panel';
+        empty.style.padding = '16px';
+        empty.textContent = 'Không có mục nào khớp bộ lọc hiện tại.';
+        container.appendChild(empty);
+      }
+
+      saveFilterState();
+    }
+
+    // Events
+    document.querySelectorAll('.f-topic').forEach(c=> c.addEventListener('change', render));
+    document.getElementById('clear').addEventListener('click', ()=>{
+      searchInput.value = '';
+      document.querySelectorAll('.f-topic').forEach(c=> c.checked = true);
+      render();
+    });
+    searchInput.addEventListener('input', render);
+
+    let collapsedAll = false;
+    document.getElementById('toggleAll').addEventListener('click', ()=>{
+      collapsedAll = !collapsedAll;
+      document.querySelectorAll('.topic-body').forEach(b=> b.style.display = collapsedAll ? 'none' : 'grid');
+      document.getElementById('toggleAll').textContent = collapsedAll ? 'Mở rộng tất cả' : 'Thu gọn tất cả';
+    });
+
+    // Init
+    restoreFilterState();
+    render();
+  </script>
+</body>
+</html>
